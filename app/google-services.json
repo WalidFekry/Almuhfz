@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "928023882363",
+    "project_id": "almuhfz",
+    "storage_bucket": "almuhfz.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:928023882363:android:f99e10c72df93747f790de",
+        "android_client_info": {
+          "package_name": "com.walid.almuhfz"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "928023882363-sgfcbp1cqp0q3afjdvbrrokuekvj445j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbRFet3D-a4PwCnRx6b2Ncz_4TWUQmo0k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "928023882363-sgfcbp1cqp0q3afjdvbrrokuekvj445j.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

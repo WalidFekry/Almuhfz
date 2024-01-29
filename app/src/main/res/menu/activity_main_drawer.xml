@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/ratee"
+            android:icon="@drawable/ic_star"
+            android:title="تقييم التطبيق" />
+        <item
+            android:id="@+id/shareee"
+            android:icon="@drawable/ic_menu_share"
+            android:title="مشاركه التطبيق" />
+        <item
+            android:id="@+id/facegroub"
+            android:icon="@drawable/ic_group"
+            android:title="جروبنا علي الفيسبوك" />
+        <item
+            android:id="@+id/teleee"
+            android:icon="@drawable/ic_web"
+            android:title="قناتنا على التليجرام" />
+        <item
+            android:id="@+id/ayak"
+            android:icon="@drawable/ic_copy_item"
+            android:title="آية الكرسي مكررة" />
+        <item
+            android:id="@+id/maktbtiplus"
+            android:icon="@drawable/ic_copy_item"
+            android:title="مكتبتي بلس" />
+        <item
+            android:id="@+id/mass"
+            android:icon="@drawable/ic_message"
+            android:title="تقديم اقتراح" />
+        <item
+            android:id="@+id/sysa"
+            android:icon="@drawable/ic_boot"
+            android:title="Privacy Policy - سياسة الخصوصية" />
+        <item
+            android:id="@+id/walidmore"
+            android:icon="@drawable/walidmore"
+            android:title="المزيد من التطبيقات المجانية" />
+
+    </group>
+
+
+
+</menu>
