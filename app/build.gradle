@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'com.google.gms.google-services'
+    id 'com.google.firebase.crashlytics'
 }
 
 android {
@@ -24,12 +25,12 @@ android {
 
     buildTypes {
         release {
-            lintOptions {
-                checkReleaseBuilds false
-                abortOnError false
-            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            firebaseCrashlytics {
+                nativeSymbolUploadEnabled true
+                unstrippedNativeLibsDir 'src/main/jniLibs'
+            }
         }
     }
     compileOptions {
@@ -45,6 +46,7 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
     implementation 'com.google.firebase:firebase-messaging:24.1.0'
     implementation 'com.google.firebase:firebase-analytics:22.2.0'
+    implementation 'com.google.firebase:firebase-crashlytics:19.4.0'
     implementation 'com.github.naseemali925:ShapedNavigationView:1.0.0'
     implementation 'com.airbnb.android:lottie:5.2.0'
     implementation 'androidx.recyclerview:recyclerview:1.4.0'
