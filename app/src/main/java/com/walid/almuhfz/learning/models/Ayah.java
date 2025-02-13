@@ -7,10 +7,10 @@ import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 @Keep
-public class Ayah implements Serializable
-{
+public class Ayah implements Serializable {
 
     @SerializedName("number")
     @Expose
@@ -42,9 +42,14 @@ public class Ayah implements Serializable
     @SerializedName("hizbQuarter")
     @Expose
     private Integer hizbQuarter;
+
     @SerializedName("sajda")
     @Expose
-    private Boolean sajda;
+    private Object sajda; // يمكن أن يكون Boolean أو Object
+
+    private Boolean sajdaBoolean;
+    private SajdaDetails sajdaObject;
+
     private final static long serialVersionUID = 4563856514646903511L;
 
     public Ayah() {
@@ -130,12 +135,25 @@ public class Ayah implements Serializable
         this.hizbQuarter = hizbQuarter;
     }
 
-    public Boolean getSajda() {
+    public Object getSajda() {
         return sajda;
     }
 
-    public void setSajda(Boolean sajda) {
+    public void setSajda(Object sajda) {
         this.sajda = sajda;
+
+        if (sajda instanceof Boolean) {
+            this.sajdaBoolean = (Boolean) sajda;
+        } else if (sajda instanceof Map) {
+            this.sajdaObject = new SajdaDetails((Map<String, Object>) sajda);
+        }
     }
 
+    public Boolean isSajdaBoolean() {
+        return sajdaBoolean;
+    }
+
+    public SajdaDetails getSajdaObject() {
+        return sajdaObject;
+    }
 }

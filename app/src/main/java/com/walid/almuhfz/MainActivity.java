@@ -1,10 +1,9 @@
 package com.walid.almuhfz;
 
 
-import android.content.Context;
+import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
-import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -26,7 +25,6 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
-import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.walid.almuhfz.learning.LearningActivity;
 import com.walid.almuhfz.learning.models.LearningData;
@@ -51,14 +49,12 @@ import softpro.naseemali.ShapedNavigationView;
 import softpro.naseemali.ShapedViewSettings;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
-
-
     private static final String TAG = "MainActivity";
     private final List<Sora> soraList = QuranUtils.getSoraList();
     ImageView rateee;
     List<Reciter> reciterList;
     SoraDetails soraDetails;
-    TextView reciterTextView, soraTextView, startLearn, fromAyaTextView, repeatSoraTextView, repeatAyaTextView, toAyaTextView;
+    TextView reciterTextView, soraTextView, startLearn, fromAyaTextView, repeatSoraTextView, repeatAyaTextView, toAyaTextView, startLearnDone;
     int lastReciter = 0;
     Reciter selectedReciter;
     int selectedSoraNumber = 1;
@@ -66,8 +62,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     int selectedTo = 1;
     int repeatAya = 1;
     int repeatSora = 1;
-    private FirebaseAnalytics mFirebaseAnalytics;
-
+    private Dialog loadingDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,23 +88,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void run() {
                 if (this != null && !isFinishing()) {
                     SmartRate.Rate(MainActivity.this, "تقييم التطبيق", "تقييمك للتطبيق يساعدنا علي التطوير المستمر وتقديم المزيد", "تقييم الان", "حسنا يمكنك تقيممنا الان علي جوجل بلاي", "اضغط هنا", "ليس الان", "Thanks ", Color.parseColor("#305A23"), 2);
-
-
                 }
             }
         }, 50000);
 
-
-        if (!isNetworkConnected()) {
-            Toast.makeText(this, "من فضلك تأكد من اتصالك بالإنترنت لتشغيل المصحف المعلم", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(this, Login.class));
-        }
-
         FirebaseMessaging.getInstance().subscribeToTopic("all");
-
-        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
-
-
     }
 
 
@@ -145,12 +128,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startActivity(intent);
         });
 
-        rateee.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.walid.almuhfz")));
-            }
-        });
+        rateee.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.walid.almuhfz"))));
 
     }
 
@@ -164,14 +142,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         repeatSoraTextView = findViewById(R.id.repeatSoraTextView);
         startLearn = findViewById(R.id.startLearn);
         rateee = findViewById(R.id.rating);
+        startLearnDone = findViewById(R.id.startLearnDone);
     }
 
     private void getListOfReciters() {
+        showLoading();
+        setViewsState(false, 0.5f);
+        toggleLearnButtons(true);
         RetrofitClient.getInstance().getApi().getListOfReciter().enqueue(new Callback<ReciterResponse>() {
             @Override
             public void onResponse(Call<ReciterResponse> call, Response<ReciterResponse> response) {
                 if (!response.isSuccessful() || response.body() == null) {
                     logErrorResponse(response);
+                    handleError("حدث خطأ أثناء تحميل البيانات. الرجاء المحاولة مرة أخرى.");
                     return;
                 }
 
@@ -185,14 +168,51 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     updateUIWithReciter(reciterList.get(0));
                 } else {
                     Log.d(TAG, "No reciters found with format = audio");
+                    handleError("حدث خطأ أثناء تحميل البيانات. الرجاء المحاولة مرة أخرى.");
                 }
             }
 
             @Override
             public void onFailure(Call<ReciterResponse> call, Throwable t) {
+                handleError("يبدو أن هناك مشكلة في الاتصال بالإنترنت. يرجى التحقق من اتصالك وحاول مرة أخرى.");
                 Log.e(TAG, "API call failed: " + t.getLocalizedMessage());
             }
         });
+    }
+
+    private void showLoading() {
+        if (loadingDialog != null) {
+            hideLoading();
+        }
+        loadingDialog = new Dialog(this);
+        loadingDialog.setContentView(R.layout.loading_dialog);
+        loadingDialog.setCancelable(false);
+        loadingDialog.show();
+    }
+
+    private void hideLoading() {
+        if (loadingDialog != null && loadingDialog.isShowing()) {
+            loadingDialog.dismiss();
+        }
+    }
+
+    private void setViewsState(boolean enable, float alpha) {
+        soraTextView.setEnabled(enable);
+        fromAyaTextView.setEnabled(enable);
+        toAyaTextView.setEnabled(enable);
+        soraTextView.setAlpha(alpha);
+        fromAyaTextView.setAlpha(alpha);
+        toAyaTextView.setAlpha(alpha);
+    }
+
+    private void toggleLearnButtons(boolean isLoading) {
+        if (isLoading) {
+            startLearn.setVisibility(View.GONE);
+            startLearnDone.setVisibility(View.VISIBLE);
+        } else {
+            startLearn.setVisibility(View.VISIBLE);
+            startLearnDone.setVisibility(View.GONE);
+        }
     }
 
     /**
@@ -227,28 +247,48 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     private void getSoraDetails() {
-        startLearn.setVisibility(View.GONE);
         RetrofitClient.getInstance().getApi().getSoraDetails(selectedSoraNumber, selectedReciter.getIdentifier()).enqueue(new Callback<SoraDetailsResponse>() {
             @Override
             public void onResponse(Call<SoraDetailsResponse> call, Response<SoraDetailsResponse> response) {
-                if (response.isSuccessful()) {
-                    soraDetails = response.body().getData();
-                    soraTextView.setText(soraDetails.getName());
-                    toAyaTextView.setText(String.valueOf(soraDetails.getAyahs().size()));
-                    selectedTo = soraDetails.getAyahs().size();
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    SoraDetails data = response.body().getData();
+                    soraDetails = data;
+
+                    soraTextView.setText(data.getName());
+                    int ayahCount = data.getAyahs().size();
+                    toAyaTextView.setText(String.valueOf(ayahCount));
+                    selectedTo = ayahCount;
                     fromAyaTextView.setText("1");
-                    startLearn.setVisibility(View.VISIBLE);
+
+                    hideLoading();
+                    setViewsState(true, 1f);
+                    toggleLearnButtons(false);
+                } else {
+                    handleError("حدث خطأ أثناء تحميل البيانات. الرجاء المحاولة مرة أخرى.");
                 }
             }
 
             @Override
             public void onFailure(Call<SoraDetailsResponse> call, Throwable t) {
+                handleError("يبدو أن هناك مشكلة في الاتصال بالإنترنت. يرجى التحقق من اتصالك وحاول مرة أخرى.");
+                Log.e(TAG, "API call failed: " + t.getLocalizedMessage());
             }
         });
     }
 
+    private void handleError(String message) {
+        if (message != null) {
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        }
+        hideLoading();
+    }
+
+
     private void selectReciter() {
-        if (reciterList == null) return;
+        if (reciterList == null) {
+            getListOfReciters();
+            return;
+        }
         CharSequence[] items = new CharSequence[reciterList.size()];
         for (int i = 0; i <= reciterList.size() - 1; i++) {
             items[i] = reciterList.get(i).getName();
@@ -275,25 +315,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         AlertDialog.Builder adb = new AlertDialog.Builder(this);
         adb.setSingleChoiceItems(items, 0, (d, n) -> {
-            Log.d(TAG, "onClick: " + 2);
             String name = soraList.get(n).getName();
             soraTextView.setText(name);
             selectedSoraNumber = n + 1;
+            showLoading();
+            toggleLearnButtons(true);
             getSoraDetails();
             d.dismiss();
         });
         adb.setNegativeButton("الغاء", null);
         adb.setTitle("اختر سورة");
         adb.show();
-
     }
 
     private void selectFromAya() {
+        CharSequence[] items = new CharSequence[0];
         NumberFormat nf = NumberFormat.getInstance(new Locale("ar", "EG"));
-        CharSequence[] items = new CharSequence[soraDetails.getAyahs().size()];
-        for (int i = 0; i <= soraDetails.getAyahs().size() - 1; i++) {
+        try {
+            items = new CharSequence[soraDetails.getAyahs().size()];
+            for (int i = 0; i <= soraDetails.getAyahs().size() - 1; i++) {
 
-            items[i] = nf.format(i + 1) + " = " + soraDetails.getAyahs().get(i).getText();
+                items[i] = nf.format(i + 1) + " = " + soraDetails.getAyahs().get(i).getText();
+            }
+        } catch (Exception e) {
+            Log.d(TAG, "selectFromAya: " + e.getMessage());
         }
         AlertDialog.Builder adb = new AlertDialog.Builder(this);
         adb.setSingleChoiceItems(items, selectedFrom - 1, (d, n) -> {
@@ -314,28 +359,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void selectToAya() {
-        NumberFormat nf = NumberFormat.getInstance(new Locale("ar", "EG"));
-        CharSequence[] items = new CharSequence[soraDetails.getAyahs().size()];
-        for (int i = 0; i <= soraDetails.getAyahs().size() - 1; i++) {
+        try {
+            NumberFormat nf = NumberFormat.getInstance(new Locale("ar", "EG"));
+            CharSequence[] items = new CharSequence[soraDetails.getAyahs().size()];
+            for (int i = 0; i <= soraDetails.getAyahs().size() - 1; i++) {
 
-            items[i] = nf.format(i + 1) + " = " + soraDetails.getAyahs().get(i).getText();
-        }
-        AlertDialog.Builder adb = new AlertDialog.Builder(this);
-        adb.setSingleChoiceItems(items, selectedTo - 1, (d, n) -> {
-            selectedTo = n + 1;
-
-
-            if (selectedTo >= selectedFrom) {
-                toAyaTextView.setText(String.valueOf(n + 1));
-            } else {
-                Toast.makeText(this, "يجب ان يكون الايه النهائيه بعد الايه الابتدائيه", Toast.LENGTH_LONG).show();
+                items[i] = nf.format(i + 1) + " = " + soraDetails.getAyahs().get(i).getText();
             }
-            d.dismiss();
-        });
-        adb.setNegativeButton("الغاء", null);
-        adb.setTitle("الى الايه");
-        adb.show();
+            AlertDialog.Builder adb = new AlertDialog.Builder(this);
+            adb.setSingleChoiceItems(items, selectedTo - 1, (d, n) -> {
+                selectedTo = n + 1;
 
+
+                if (selectedTo >= selectedFrom) {
+                    toAyaTextView.setText(String.valueOf(n + 1));
+                } else {
+                    Toast.makeText(this, "يجب ان يكون الايه النهائيه بعد الايه الابتدائيه", Toast.LENGTH_LONG).show();
+                }
+                d.dismiss();
+            });
+            adb.setNegativeButton("الغاء", null);
+            adb.setTitle("الى الايه");
+            adb.show();
+
+        } catch (Exception e) {
+            Log.d(TAG, "selectToAya: " + e.getMessage());
+        }
     }
 
     private void selectAyaRepeat() {
@@ -398,11 +447,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         alert.show();
     }
 
-    private boolean isNetworkConnected() {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnected();
-    }
 
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {

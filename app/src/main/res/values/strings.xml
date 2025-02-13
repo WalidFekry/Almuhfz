@@ -1,8 +1,9 @@
 <resources>
     <string name="app_name">المٌحفظ للقرآن</string>
-    <string name="navigation_drawer_open">Open navigation drawer</string>
-    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="navigation_drawer_open">افتح قائمة التنقل</string>
+    <string name="navigation_drawer_close">أغلق قائمة التنقل</string>
     <string name="header">المُحفظ للقرآن - المصحف المعلم</string>
     <string name="aboutapp">المٌحفظ للقرآن - المصحف المعلم 🌸</string>
     <string name="login" >التطبيق يحتاج إلى اتصال انترنت 😥 .. من فضلك قم بالاتصال بالانترنت واعد فتح التطبيق مره اخرى 🌸</string>
+    <string name="loading_title">جاري التحميل الآن .. برجاء الانتظار !</string>
 </resources>

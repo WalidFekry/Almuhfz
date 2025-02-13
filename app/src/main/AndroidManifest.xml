@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.walid.almuhfz">
+    xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Remove AD_ID permission -->
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>
 
     <application
@@ -14,31 +16,22 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Almuhfz">
 
-
+        <!-- Splash Screen (Launcher Activity) -->
         <activity
-            android:name=".Login"
-            android:exported="false" />
-        <activity
-            android:name=".learning.LearningActivity"
-            android:exported="false" />
-        <activity
-            android:name=".Splash"
+            android:name=".SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".MainActivity"
-            android:exported="false" />
 
-        <meta-data
-            android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+        <!-- Main Application Activities -->
+        <activity android:name=".MainActivity" android:exported="false" />
+        <activity android:name=".NoInternetActivity" android:exported="false" />
+        <activity android:name=".learning.LearningActivity" android:exported="false" />
 
-
+        <!-- Firebase Messaging Service -->
         <service
             android:name=".MyFirebaseMessagingService"
             android:exported="true">
@@ -46,6 +39,11 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <!-- AdMob Application ID -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
     </application>
 
 </manifest>

@@ -201,6 +201,21 @@
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:layout_width="match_parent"
+                    android:visibility="visible"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="16dp"
+                    android:background="@drawable/value_background"
+                    android:gravity="center"
+                    android:backgroundTint="@color/background_dark"
+                    android:padding="16dp"
+                    android:id="@+id/startLearnDone"
+                    android:text="جاري التحميل .."
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
                 <ImageView
                     android:id="@+id/rating"
                     android:layout_width="match_parent"
