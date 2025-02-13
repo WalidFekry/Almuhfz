@@ -469,7 +469,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @SuppressLint("SetTextI18n")
     private void selectSoraRepeat() {
-
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         final EditText edittext = new EditText(this);
         edittext.setGravity(Gravity.CENTER);
@@ -532,14 +531,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         } else if (id == R.id.walidmore) {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.co/US34fsUZeW")));
+        }else if (id == R.id.notification_messages) {
+            Intent i = new Intent(this, NotificationsMessagesActivity.class);
+            startActivity(i);
         }
-
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
-
-
     }
 
 

@@ -152,6 +152,7 @@
                     android:id="@+id/starquran"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
+                    android:layout_margin="10dp"
                     app:lottie_autoPlay="true"
                     app:lottie_loop="false"
                     app:lottie_fileName="favorite.json" />
@@ -160,6 +161,7 @@
                     android:id="@+id/sharequran"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
+                    android:layout_margin="10dp"
                     app:lottie_autoPlay="true"
                     app:lottie_loop="false"
                     app:lottie_fileName="share.json" />
@@ -168,6 +170,7 @@
                     android:id="@+id/copyquran"
                     android:layout_width="35dp"
                     android:layout_height="35dp"
+                    android:layout_margin="10dp"
                     app:materialIcon="content_copy"
                     app:materialIconColor="#EE9892"
                     app:materialIconSize="35dp" />
@@ -175,9 +178,19 @@
                 <net.steamcrafted.materialiconlib.MaterialIconView
                     android:id="@+id/qumsgwhats"
                     android:layout_width="40dp"
+                    android:layout_margin="10dp"
                     android:layout_height="40dp"
                     app:materialIcon="whatsapp"
                     app:materialIconColor="#55CD6C"
+                    app:materialIconSize="40dp" />
+
+                <net.steamcrafted.materialiconlib.MaterialIconView
+                    android:id="@+id/facebook_share"
+                    android:layout_width="40dp"
+                    android:layout_margin="10dp"
+                    android:layout_height="40dp"
+                    app:materialIcon="facebook_box"
+                    app:materialIconColor="#0866FF"
                     app:materialIconSize="40dp" />
 
             </LinearLayout>

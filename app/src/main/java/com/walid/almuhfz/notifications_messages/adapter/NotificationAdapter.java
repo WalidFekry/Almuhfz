@@ -58,22 +58,36 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 notification.getCreatedAt().split(" ")[0] : "2025-02-14");
 
         setClickListener(holder.shareButton, v -> shareNotification(itemContext, notification));
-        setClickListener(holder.starButton, v -> openLink(itemContext, "https://t.co/fkNQTMLNxn"));
+        setClickListener(holder.starButton, v -> openLink(itemContext, "https://t.co/XerG0QVIvi"));
         setClickListener(holder.whatsappButton, v -> shareOnWhatsApp(itemContext, notification.getTitle()));
         setClickListener(holder.copyButton, v -> copyToClipboard(itemContext, notification.getTitle()));
+        setClickListener(holder.facebookButton, v -> shareOnFacebook(itemContext, notification.getTitle()));
     }
 
     private void setClickListener(View view, View.OnClickListener listener) {
         view.setOnClickListener(listener);
     }
 
+    private void shareOnFacebook(Context context, String text) {
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("text/plain");
+        intent.setPackage("com.facebook.katana");
+        intent.putExtra(Intent.EXTRA_TEXT, text + "\n" + "تم نسخ هذا النص من تطبيق المُحفظ ^_^");
+        try {
+            context.startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(context, "تطبيق فيسبوك غير مثبت!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
     private void shareNotification(Context context, NotificationModel notification) {
         Intent sendIntent = new Intent(Intent.ACTION_SEND);
         sendIntent.setType("text/plain");
-        sendIntent.putExtra(Intent.EXTRA_SUBJECT, "تطبيق (مصحفي)");
+        sendIntent.putExtra(Intent.EXTRA_SUBJECT, "تطبيق (المُحفظ)");
         sendIntent.putExtra(Intent.EXTRA_TEXT, notification.getTitle() + "\n" +
-                "تم النسخ من تطبيق مصحفي 💙 👇 https://t.co/fkNQTMLNxn \n");
-        context.startActivity(Intent.createChooser(sendIntent, "مشاركة نصوص من تطبيق مصحفي:"));
+                "تم النسخ من تطبيق المٌحقظ 💙 👇 https://t.co/XerG0QVIvi \n");
+        context.startActivity(Intent.createChooser(sendIntent, "مشاركة نصوص من تطبيق المُحفظ:"));
     }
 
     private void openLink(Context context, String url) {
@@ -84,7 +98,8 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         Intent whatsappIntent = new Intent(Intent.ACTION_SEND);
         whatsappIntent.setType("text/plain");
         whatsappIntent.setPackage("com.whatsapp");
-        whatsappIntent.putExtra(Intent.EXTRA_TEXT, text);
+        whatsappIntent.putExtra(Intent.EXTRA_TEXT, text + "\n" +
+                "تم النسخ من تطبيق المٌحقظ 💙 👇 https://t.co/XerG0QVIvi \n");
         try {
             context.startActivity(whatsappIntent);
         } catch (ActivityNotFoundException ex) {
@@ -94,7 +109,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
     private void copyToClipboard(Context context, String text) {
         ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-        ClipData clip = ClipData.newPlainText("", text + "\n" + "تم نسخ هذا النص من تطبيق مصحفي ^_^");
+        ClipData clip = ClipData.newPlainText("", text + "\n" + "تم نسخ هذا النص من تطبيق المُحفظ ^_^");
         clipboard.setPrimaryClip(clip);
         Toast.makeText(context, "تم نسخ النص - قم بمشاركته الآن مع أصدقائك", Toast.LENGTH_SHORT).show();
     }
@@ -105,7 +120,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     }
 
     public static class NotificationViewHolder extends RecyclerView.ViewHolder {
-        MaterialIconView whatsappButton, copyButton;
+        MaterialIconView whatsappButton, copyButton, facebookButton;
         TextView title;
         LottieAnimationView starButton, shareButton;
         AppCompatTextView messageNumber, messageTime;
@@ -119,6 +134,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             whatsappButton = itemView.findViewById(R.id.qumsgwhats);
             messageNumber = itemView.findViewById(R.id.message_number);
             messageTime = itemView.findViewById(R.id.message_time);
+            facebookButton = itemView.findViewById(R.id.facebook_share);
         }
     }
 }

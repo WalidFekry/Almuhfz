@@ -5,6 +5,10 @@
 
     <group android:checkableBehavior="single">
         <item
+            android:id="@+id/notification_messages"
+            android:icon="@drawable/notification"
+            android:title="اقتباسات عشوائية" />
+        <item
             android:id="@+id/ratee"
             android:icon="@drawable/ic_star"
             android:title="تقييم التطبيق" />
