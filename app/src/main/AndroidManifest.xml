@@ -28,6 +28,7 @@
 
         <!-- Main Application Activities -->
         <activity android:name=".MainActivity" android:exported="false" />
+        <activity android:name=".notifications_messages.NotificationsMessagesActivity" android:exported="false" />
         <activity android:name=".NoInternetActivity" android:exported="false" />
         <activity android:name=".learning.LearningActivity" android:exported="false" />
 

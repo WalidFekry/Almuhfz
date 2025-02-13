@@ -1,15 +1,18 @@
 package com.walid.almuhfz;
 
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.text.InputType;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
@@ -17,6 +20,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -35,6 +39,7 @@ import com.walid.almuhfz.learning.models.SoraDetails;
 import com.walid.almuhfz.learning.models.SoraDetailsResponse;
 import com.walid.almuhfz.learning.networking.QuranUtils;
 import com.walid.almuhfz.learning.networking.RetrofitClient;
+import com.walid.almuhfz.notifications_messages.NotificationsMessagesActivity;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -65,34 +70,79 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private Dialog loadingDialog;
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_toolbar, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.show_notifications) {
+            Intent i = new Intent(this, NotificationsMessagesActivity.class);
+            startActivity(i);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.mainbar);
 
         initViews();
         setListeners();
+        setupToolbar();
+        setupDrawer();
+        setupNavigationView();
+
         getListOfReciters();
 
+        promptUserForRating();
+
+        FirebaseMessaging.getInstance().subscribeToTopic("all");
+    }
+
+    private void promptUserForRating() {
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            if (!isFinishing()) {
+                SmartRate.Rate(
+                        MainActivity.this,
+                        "قيم تجربتك معنا!",
+                        "نحن نسعى لجعل تطبيق المحفظ أفضل كل يوم، ويساعدنا تقييمك في تقديم تجربة مميزة لك!",
+                        "قيم الآن",
+                        "دعمك لنا يحفزنا! اترك لنا تقييماً رائعاً على جوجل بلاي",
+                        "اضغط هنا للتقييم",
+                        "ليس الآن",
+                        "شكراً لدعمك!",
+                        Color.parseColor("#305A23"),
+                        2
+                );
+            }
+        }, 50000);
+    }
+
+    private void setupToolbar() {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+    }
+
+    private void setupDrawer() {
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar,
+                R.string.navigation_drawer_open, R.string.navigation_drawer_close
+        );
         drawer.addDrawerListener(toggle);
         toggle.syncState();
+    }
+
+    private void setupNavigationView() {
         ShapedNavigationView shapedNavigationView = findViewById(R.id.nav_view);
         shapedNavigationView.getSettings().setShapeType(ShapedViewSettings.ROUNDED_RECT);
         shapedNavigationView.setNavigationItemSelectedListener(this);
-
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            public void run() {
-                if (this != null && !isFinishing()) {
-                    SmartRate.Rate(MainActivity.this, "تقييم التطبيق", "تقييمك للتطبيق يساعدنا علي التطوير المستمر وتقديم المزيد", "تقييم الان", "حسنا يمكنك تقيممنا الان علي جوجل بلاي", "اضغط هنا", "ليس الان", "Thanks ", Color.parseColor("#305A23"), 2);
-                }
-            }
-        }, 50000);
-
-        FirebaseMessaging.getInstance().subscribeToTopic("all");
     }
 
 
@@ -129,7 +179,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
         rateee.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.walid.almuhfz"))));
-
     }
 
 
@@ -151,7 +200,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         toggleLearnButtons(true);
         RetrofitClient.getInstance().getApi().getListOfReciter().enqueue(new Callback<ReciterResponse>() {
             @Override
-            public void onResponse(Call<ReciterResponse> call, Response<ReciterResponse> response) {
+            public void onResponse(@NonNull Call<ReciterResponse> call, @NonNull Response<ReciterResponse> response) {
                 if (!response.isSuccessful() || response.body() == null) {
                     logErrorResponse(response);
                     handleError("حدث خطأ أثناء تحميل البيانات. الرجاء المحاولة مرة أخرى.");
@@ -173,7 +222,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
             @Override
-            public void onFailure(Call<ReciterResponse> call, Throwable t) {
+            public void onFailure(@NonNull Call<ReciterResponse> call, @NonNull Throwable t) {
                 handleError("يبدو أن هناك مشكلة في الاتصال بالإنترنت. يرجى التحقق من اتصالك وحاول مرة أخرى.");
                 Log.e(TAG, "API call failed: " + t.getLocalizedMessage());
             }
@@ -249,7 +298,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void getSoraDetails() {
         RetrofitClient.getInstance().getApi().getSoraDetails(selectedSoraNumber, selectedReciter.getIdentifier()).enqueue(new Callback<SoraDetailsResponse>() {
             @Override
-            public void onResponse(Call<SoraDetailsResponse> call, Response<SoraDetailsResponse> response) {
+            public void onResponse(@NonNull Call<SoraDetailsResponse> call, @NonNull Response<SoraDetailsResponse> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
                     SoraDetails data = response.body().getData();
                     soraDetails = data;
@@ -269,7 +318,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
             @Override
-            public void onFailure(Call<SoraDetailsResponse> call, Throwable t) {
+            public void onFailure(@NonNull Call<SoraDetailsResponse> call, @NonNull Throwable t) {
                 handleError("يبدو أن هناك مشكلة في الاتصال بالإنترنت. يرجى التحقق من اتصالك وحاول مرة أخرى.");
                 Log.e(TAG, "API call failed: " + t.getLocalizedMessage());
             }
@@ -387,6 +436,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private void selectAyaRepeat() {
 
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
@@ -401,7 +451,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         alert.setPositiveButton("تم", (dialog, whichButton) -> {
             String textValue = edittext.getText().toString();
-            if (textValue.equals("") || textValue.equals("0") || Integer.parseInt(textValue) > 604) {
+            if (textValue.isEmpty() || textValue.equals("0") || Integer.parseInt(textValue) > 604) {
                 Toast.makeText(this, "برجاء اختيار رقم صفحة صالح", Toast.LENGTH_SHORT).show();
             } else {
                 repeatAya = Integer.parseInt(textValue);
@@ -417,6 +467,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         alert.show();
     }
 
+    @SuppressLint("SetTextI18n")
     private void selectSoraRepeat() {
 
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
@@ -431,7 +482,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         alert.setPositiveButton("تم", (dialog, whichButton) -> {
             String textValue = edittext.getText().toString();
-            if (textValue.equals("") || textValue.equals("0") || Integer.parseInt(textValue) > 604) {
+            if (textValue.isEmpty() || textValue.equals("0") || Integer.parseInt(textValue) > 604) {
                 Toast.makeText(this, "برجاء اختيار رقم صفحة صالح", Toast.LENGTH_SHORT).show();
             } else {
                 repeatSora = Integer.parseInt(textValue);

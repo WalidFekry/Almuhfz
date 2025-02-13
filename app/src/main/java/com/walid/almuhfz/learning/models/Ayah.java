@@ -12,6 +12,7 @@ import java.util.Map;
 @Keep
 public class Ayah implements Serializable {
 
+    private static final long serialVersionUID = 4563856514646903511L;
     @SerializedName("number")
     @Expose
     private Integer number;
@@ -20,7 +21,7 @@ public class Ayah implements Serializable {
     private String audio;
     @SerializedName("audioSecondary")
     @Expose
-    private List<String> audioSecondary = null;
+    private List<String> audioSecondary;
     @SerializedName("text")
     @Expose
     private String text;
@@ -42,19 +43,17 @@ public class Ayah implements Serializable {
     @SerializedName("hizbQuarter")
     @Expose
     private Integer hizbQuarter;
-
     @SerializedName("sajda")
     @Expose
-    private Object sajda; // يمكن أن يكون Boolean أو Object
-
+    private Object sajda; // قد يكون Boolean أو Object (Map)
     private Boolean sajdaBoolean;
     private SajdaDetails sajdaObject;
 
-    private final static long serialVersionUID = 4563856514646903511L;
-
     public Ayah() {
+        // Constructor فارغ
     }
 
+    // 🟢 Getter & Setter Methods
     public Integer getNumber() {
         return number;
     }
@@ -144,8 +143,19 @@ public class Ayah implements Serializable {
 
         if (sajda instanceof Boolean) {
             this.sajdaBoolean = (Boolean) sajda;
+            this.sajdaObject = null; // تأكد من عدم وجود قيمة قديمة
         } else if (sajda instanceof Map) {
-            this.sajdaObject = new SajdaDetails((Map<String, Object>) sajda);
+            try {
+                @SuppressWarnings("unchecked") // لتجنب التحذير
+                Map<String, Object> sajdaMap = (Map<String, Object>) sajda;
+                this.sajdaObject = new SajdaDetails(sajdaMap);
+                this.sajdaBoolean = null; // تأكد من عدم وجود قيمة قديمة
+            } catch (ClassCastException e) {
+                this.sajdaObject = null; // في حالة خطأ التحويل
+            }
+        } else {
+            this.sajdaBoolean = null;
+            this.sajdaObject = null;
         }
     }
 

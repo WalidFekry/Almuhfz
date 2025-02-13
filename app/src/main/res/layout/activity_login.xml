@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:layout_gravity="center"
     android:orientation="vertical"
-    tools:context=".Login">
+    tools:context=".NoInternetActivity">
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -111,10 +111,10 @@
     android:layout_width="250dp"
     android:layout_height="65dp"
     android:layout_gravity="center"
-    android:text="اعادة المحاولة 🤔"
+    android:text="@string/try_again"
     android:layout_marginTop="15dp"
     android:fontFamily="@font/jazeera"
-    android:textSize="20dp"
+    android:textSize="20sp"
     android:textColor="#fff"
     android:background="@drawable/around_line3"
     >
