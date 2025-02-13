@@ -1,6 +1,5 @@
 package com.walid.almuhfz;
 
-import static android.content.ContentValues.TAG;
 
 import android.content.Context;
 import android.content.Intent;
@@ -19,13 +18,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -40,6 +39,7 @@ import com.walid.almuhfz.learning.networking.QuranUtils;
 import com.walid.almuhfz.learning.networking.RetrofitClient;
 
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -53,6 +53,7 @@ import softpro.naseemali.ShapedViewSettings;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
 
+    private static final String TAG = "MainActivity";
     private final List<Sora> soraList = QuranUtils.getSoraList();
     ImageView rateee;
     List<Reciter> reciterList;
@@ -68,7 +69,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private FirebaseAnalytics mFirebaseAnalytics;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -81,8 +81,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
         ShapedNavigationView shapedNavigationView = findViewById(R.id.nav_view);
@@ -93,15 +92,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         handler.postDelayed(new Runnable() {
             public void run() {
                 if (this != null && !isFinishing()) {
-                    SmartRate.Rate(MainActivity.this
-                            , "تقييم التطبيق"
-                            , "تقييمك للتطبيق يساعدنا علي التطوير المستمر وتقديم المزيد"
-                            , "تقييم الان"
-                            , "حسنا يمكنك تقيممنا الان علي جوجل بلاي"
-                            , "اضغط هنا"
-                            , "ليس الان"
-                            , "Thanks "
-                            , Color.parseColor("#305A23"), 2);
+                    SmartRate.Rate(MainActivity.this, "تقييم التطبيق", "تقييمك للتطبيق يساعدنا علي التطوير المستمر وتقديم المزيد", "تقييم الان", "حسنا يمكنك تقيممنا الان علي جوجل بلاي", "اضغط هنا", "ليس الان", "Thanks ", Color.parseColor("#305A23"), 2);
 
 
                 }
@@ -120,7 +111,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
-
 
 
     private void setListeners() {
@@ -150,15 +140,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         startLearn.setOnClickListener(view -> {
             Intent intent = new Intent(this, LearningActivity.class);
-            LearningData data = new LearningData(
-                    selectedReciter,
-                    soraDetails,
-                    selectedSoraNumber,
-                    selectedFrom,
-                    selectedTo,
-                    repeatAya,
-                    repeatSora
-            );
+            LearningData data = new LearningData(selectedReciter, soraDetails, selectedSoraNumber, selectedFrom, selectedTo, repeatAya, repeatSora);
             intent.putExtra("learning_data", data);
             startActivity(intent);
         });
@@ -185,50 +167,84 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void getListOfReciters() {
-
         RetrofitClient.getInstance().getApi().getListOfReciter().enqueue(new Callback<ReciterResponse>() {
             @Override
             public void onResponse(Call<ReciterResponse> call, Response<ReciterResponse> response) {
-                if (response.isSuccessful()) {
-                    Log.d(TAG, ": size = " + response.body().getData().size());
-                    reciterList = response.body().getData();
-                    reciterTextView.setText(reciterList.get(0).getName());
-                    selectedReciter = reciterList.get(0);
-                    getSoraDetails();
+                if (!response.isSuccessful() || response.body() == null) {
+                    logErrorResponse(response);
+                    return;
+                }
+
+                List<Reciter> allReciters = response.body().getData();
+                reciterList = filterRecitersByFormat(allReciters, "audio");
+
+                Log.d(TAG, "Total reciters: " + allReciters.size());
+                Log.d(TAG, "Filtered reciters (audio): " + reciterList.size());
+
+                if (!reciterList.isEmpty()) {
+                    updateUIWithReciter(reciterList.get(0));
                 } else {
-                    Log.d(TAG, ": " + response.message());
-                    Log.d(TAG, ": " + response.code());
+                    Log.d(TAG, "No reciters found with format = audio");
                 }
             }
 
             @Override
             public void onFailure(Call<ReciterResponse> call, Throwable t) {
-                Log.d(TAG, ": " + t.getLocalizedMessage());
+                Log.e(TAG, "API call failed: " + t.getLocalizedMessage());
             }
         });
-
     }
+
+    /**
+     * Filters the reciters list based on the given format.
+     */
+    private List<Reciter> filterRecitersByFormat(List<Reciter> reciters, String format) {
+        List<Reciter> filteredList = new ArrayList<>();
+        for (Reciter reciter : reciters) {
+            if (format.equalsIgnoreCase(reciter.getFormat())) {
+                filteredList.add(reciter);
+            }
+        }
+        return filteredList;
+    }
+
+    /**
+     * Logs API error response details.
+     */
+    private void logErrorResponse(Response<?> response) {
+        Log.e(TAG, "Response Error: " + response.message());
+        Log.e(TAG, "Response Code: " + response.code());
+    }
+
+    /**
+     * Updates the UI with the selected reciter.
+     */
+    private void updateUIWithReciter(Reciter reciter) {
+        reciterTextView.setText(reciter.getName());
+        selectedReciter = reciter;
+        getSoraDetails();
+    }
+
 
     private void getSoraDetails() {
         startLearn.setVisibility(View.GONE);
-        RetrofitClient.getInstance().getApi().getSoraDetails(selectedSoraNumber, selectedReciter.getIdentifier())
-                .enqueue(new Callback<SoraDetailsResponse>() {
-                    @Override
-                    public void onResponse(Call<SoraDetailsResponse> call, Response<SoraDetailsResponse> response) {
-                        if (response.isSuccessful()) {
-                            soraDetails = response.body().getData();
-                            soraTextView.setText(soraDetails.getName());
-                            toAyaTextView.setText(String.valueOf(soraDetails.getAyahs().size()));
-                            selectedTo = soraDetails.getAyahs().size();
-                            fromAyaTextView.setText("1");
-                            startLearn.setVisibility(View.VISIBLE);
-                        }
-                    }
+        RetrofitClient.getInstance().getApi().getSoraDetails(selectedSoraNumber, selectedReciter.getIdentifier()).enqueue(new Callback<SoraDetailsResponse>() {
+            @Override
+            public void onResponse(Call<SoraDetailsResponse> call, Response<SoraDetailsResponse> response) {
+                if (response.isSuccessful()) {
+                    soraDetails = response.body().getData();
+                    soraTextView.setText(soraDetails.getName());
+                    toAyaTextView.setText(String.valueOf(soraDetails.getAyahs().size()));
+                    selectedTo = soraDetails.getAyahs().size();
+                    fromAyaTextView.setText("1");
+                    startLearn.setVisibility(View.VISIBLE);
+                }
+            }
 
-                    @Override
-                    public void onFailure(Call<SoraDetailsResponse> call, Throwable t) {
-                    }
-                });
+            @Override
+            public void onFailure(Call<SoraDetailsResponse> call, Throwable t) {
+            }
+        });
     }
 
     private void selectReciter() {
@@ -400,7 +416,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/groups/440403217380641")));
         } else if (id == R.id.teleee) {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/App_Maktbti")));
-        }else if (id == R.id.ayak) {
+        } else if (id == R.id.ayak) {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.co/2xVh8rqVLS")));
         } else if (id == R.id.ratee) {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.walid.almuhfz")));
@@ -408,14 +424,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Intent sendIntent = new Intent();
             sendIntent.setAction(Intent.ACTION_SEND);
             sendIntent.putExtra(Intent.EXTRA_SUBJECT, "المٌحفظ للقرآن - المصحف المعلم 💙");
-            sendIntent.putExtra(Intent.EXTRA_TEXT, getResources().getString(R.string.aboutapp) + "\n" +
-                    "\n" +
-                    "حمل التطبيق من خلال هذا الرابط أو من متجر جوجل بلاي \uD83D\uDC47  https://play.google.com/store/apps/details?id=com.walid.almuhfz \n");
+            sendIntent.putExtra(Intent.EXTRA_TEXT, getResources().getString(R.string.aboutapp) + "\n" + "\n" + "حمل التطبيق من خلال هذا الرابط أو من متجر جوجل بلاي \uD83D\uDC47  https://play.google.com/store/apps/details?id=com.walid.almuhfz \n");
             sendIntent.setType("text/plain");
             startActivity(sendIntent);
         } else if (id == R.id.mass) {
-            Intent emailIntent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts(
-                    "mailto", "prowalidfekry@gmail.com", null));
+            Intent emailIntent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts("mailto", "prowalidfekry@gmail.com", null));
             emailIntent.putExtra(Intent.EXTRA_SUBJECT, "رسالة إلى مبرمج تطبيق المٌحفظ 📲");
             emailIntent.putExtra(Intent.EXTRA_TEXT, "");
             startActivity(Intent.createChooser(emailIntent, "Send email..."));

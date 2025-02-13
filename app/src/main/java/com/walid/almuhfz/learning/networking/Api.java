@@ -11,7 +11,7 @@ import retrofit2.http.Path;
 
 public interface Api {
 
-    @GET("v1/edition?language=ar&format=audio")
+    @GET("v1/edition?language=ar")
     Call<ReciterResponse> getListOfReciter();
 
     @GET("v1/surah/{soraId}}/{identifier}")
