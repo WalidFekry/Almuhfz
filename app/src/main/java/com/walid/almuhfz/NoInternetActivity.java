@@ -7,6 +7,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 
+import com.walid.almuhfz.notifications_messages.NotificationsMessagesActivity;
+
 public class NoInternetActivity extends AppCompatActivity {
 
     private AppCompatButton loginButton;
@@ -17,7 +19,7 @@ public class NoInternetActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         initializeViews();
         setupListeners();
-        Toast.makeText(this, "يرجى التأكد من اتصالك بالإنترنت لاستخدام المصحف المعلم.", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "يبدو أن هناك مشكلة في الاتصال بالإنترنت. يرجى التحقق من اتصالك وحاول مرة أخرى.", Toast.LENGTH_LONG).show();
     }
 
     private void initializeViews() {

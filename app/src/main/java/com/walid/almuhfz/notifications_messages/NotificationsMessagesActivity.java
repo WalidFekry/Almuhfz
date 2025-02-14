@@ -1,6 +1,7 @@
 package com.walid.almuhfz.notifications_messages;
 
 import android.app.Dialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.animation.AnimationUtils;
@@ -11,6 +12,7 @@ import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.walid.almuhfz.NoInternetActivity;
 import com.walid.almuhfz.R;
 import com.walid.almuhfz.notifications_messages.adapter.NotificationAdapter;
 import com.walid.almuhfz.notifications_messages.model.NotificationModel;
@@ -79,10 +81,16 @@ public class NotificationsMessagesActivity extends AppCompatActivity {
             @Override
             public void onFailure(String errorMessage) {
                 hideLoading();
-                Toast.makeText(NotificationsMessagesActivity.this, "يبدو أن هناك مشكلة في الاتصال بالإنترنت. يرجى التحقق من اتصالك وحاول مرة أخرى.", Toast.LENGTH_SHORT).show();
                 Log.e(TAG, "Error: " + errorMessage);
+                openNoInternet();
             }
         });
+    }
+
+    private void openNoInternet() {
+        Intent i = new Intent(this, NoInternetActivity.class);
+        startActivity(i);
+        finish();
     }
 
     private void updateRecyclerView(List<NotificationModel> notifications) {

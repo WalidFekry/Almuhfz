@@ -76,7 +76,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         try {
             context.startActivity(intent);
         } catch (ActivityNotFoundException e) {
-            Toast.makeText(context, "تطبيق فيسبوك غير مثبت!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "تطبيق فيسبوك غير مثبت!", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -111,7 +111,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText("", text + "\n" + "تم نسخ هذا النص من تطبيق المُحفظ ^_^");
         clipboard.setPrimaryClip(clip);
-        Toast.makeText(context, "تم نسخ النص - قم بمشاركته الآن مع أصدقائك", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, "تم نسخ النص - قم بمشاركته الآن مع أصدقائك", Toast.LENGTH_LONG).show();
     }
 
     @Override
