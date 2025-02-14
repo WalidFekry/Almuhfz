@@ -11,8 +11,8 @@ android {
         applicationId "com.walid.almuhfz"
         minSdkVersion 21
         targetSdkVersion 35
-        versionCode 19
-        versionName "1.8"
+        versionCode 20
+        versionName "1.9"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
