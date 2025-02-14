@@ -5,6 +5,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
@@ -62,8 +63,9 @@ import softpro.naseemali.ShapedViewSettings;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private static final String TAG = "MainActivity";
     private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1;
+    private static final long ONE_DAY_MILLIS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
     private final List<Sora> soraList = QuranUtils.getSoraList();
-    ImageView rateee;
+    ImageView rateApp;
     List<Reciter> reciterList;
     SoraDetails soraDetails;
     TextView reciterTextView, soraTextView, startLearn, fromAyaTextView, repeatSoraTextView, repeatAyaTextView, toAyaTextView, startLearnDone;
@@ -157,11 +159,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void promptUserForRating() {
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            if (!isFinishing()) {
-                SmartRate.Rate(MainActivity.this, "قيم تجربتك معنا!", "نحن نسعى لجعل تطبيق المحفظ أفضل كل يوم، ويساعدنا تقييمك في تقديم تجربة مميزة لك!", "قيم الآن", "دعمك لنا يحفزنا! اترك لنا تقييماً رائعاً على جوجل بلاي", "اضغط هنا للتقييم", "ليس الآن", "شكراً لدعمك!", Color.parseColor("#305A23"), 2);
-            }
-        }, 50000);
+        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+        long lastPromptTime = prefs.getLong("last_rating_prompt", 0);
+        long currentTime = System.currentTimeMillis();
+
+        // Check if 24 hours have passed since the last rating prompt
+        if (currentTime - lastPromptTime >= ONE_DAY_MILLIS) {
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                if (!isFinishing()) {
+                    SmartRate.Rate(MainActivity.this, "قيم تجربتك معنا!", "نحن نسعى لجعل تطبيق المحفظ أفضل كل يوم، ويساعدنا تقييمك في تقديم تجربة مميزة لك!", "قيم الآن", "دعمك لنا يحفزنا! اترك لنا تقييماً رائعاً على جوجل بلاي", "اضغط هنا للتقييم", "ليس الآن", "شكراً لدعمك!", Color.parseColor("#305A23"), 2);
+
+                    // Update the last rating prompt timestamp
+                    saveLastPromptTime();
+                }
+            }, 40000);
+        }
+    }
+
+    // Save the last time the rating prompt was shown
+    private void saveLastPromptTime() {
+        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+        prefs.edit().putLong("last_rating_prompt", System.currentTimeMillis()).apply();
     }
 
     private void setupToolbar() {
@@ -216,7 +234,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startActivity(intent);
         });
 
-        rateee.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.walid.almuhfz"))));
+        rateApp.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.walid.almuhfz"))));
     }
 
 
@@ -228,7 +246,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         repeatAyaTextView = findViewById(R.id.repeatAyaTextView);
         repeatSoraTextView = findViewById(R.id.repeatSoraTextView);
         startLearn = findViewById(R.id.startLearn);
-        rateee = findViewById(R.id.rating);
+        rateApp = findViewById(R.id.rating);
         startLearnDone = findViewById(R.id.startLearnDone);
     }
 
