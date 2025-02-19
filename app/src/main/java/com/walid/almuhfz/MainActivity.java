@@ -80,6 +80,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     int repeatAya = 1;
     int repeatSora = 1;
     private Dialog loadingDialog;
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private Runnable ratingRunnable;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -167,16 +169,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int promptCount = prefs.getInt("rating_prompt_count", 0);
         long currentTime = System.currentTimeMillis();
 
-        // Check that it has not exceeded the maximum (10 times) and that it has been 24 hours since the last time
+        // Ensure the prompt count does not exceed the limit and at least 24 hours have passed
         if (promptCount < MAX_PROMPT_COUNT && (currentTime - lastPromptTime >= ONE_DAY_MILLIS)) {
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            ratingRunnable = () -> {
                 if (!isFinishing()) {
-                    SmartRate.Rate(MainActivity.this, "قيم تجربتك معنا!", "نحن نسعى لجعل تطبيق المحفظ أفضل كل يوم، ويساعدنا تقييمك في تقديم تجربة مميزة لك!", "قيم الآن", "دعمك لنا يحفزنا! اترك لنا تقييماً رائعاً على جوجل بلاي", "اضغط هنا للتقييم", "ليس الآن", "شكراً لدعمك!", Color.parseColor("#305A23"), 2);
+                    SmartRate.Rate(MainActivity.this,
+                            "قيم تجربتك معنا!",
+                            "نحن نسعى لجعل تطبيق المحفظ أفضل كل يوم، ويساعدنا تقييمك في تقديم تجربة مميزة لك!",
+                            "قيم الآن",
+                            "دعمك لنا يحفزنا! اترك لنا تقييماً رائعاً على جوجل بلاي",
+                            "اضغط هنا للتقييم",
+                            "ليس الآن",
+                            "شكراً لدعمك!",
+                            Color.parseColor("#305A23"),
+                            2
+                    );
 
-                    // Update rating data (date + number of times)
+                    // Update rating prompt data (last prompt time + prompt count)
                     saveLastPromptData(promptCount + 1);
                 }
-            }, 5000);
+            };
+
+            handler.postDelayed(ratingRunnable, 5000); // Execute after 5 seconds
         }
     }
 
@@ -623,5 +637,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (ratingRunnable != null) {
+            handler.removeCallbacks(ratingRunnable);
+        }
+    }
 }
