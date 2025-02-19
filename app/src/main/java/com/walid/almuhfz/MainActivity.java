@@ -66,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final String TAG = "MainActivity";
     private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1;
     private static final long ONE_DAY_MILLIS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+    private static final int MAX_PROMPT_COUNT = 10; // Maximum number of times to show
     private final List<Sora> soraList = QuranUtils.getSoraList();
     ImageView rateApp;
     List<Reciter> reciterList;
@@ -163,25 +164,33 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void promptUserForRating() {
         SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
         long lastPromptTime = prefs.getLong("last_rating_prompt", 0);
+        int promptCount = prefs.getInt("rating_prompt_count", 0);
         long currentTime = System.currentTimeMillis();
 
-        // Check if 24 hours have passed since the last rating prompt
-        if (currentTime - lastPromptTime >= ONE_DAY_MILLIS) {
+        // Check that it has not exceeded the maximum (10 times) and that it has been 24 hours since the last time
+        if (promptCount < MAX_PROMPT_COUNT && (currentTime - lastPromptTime >= ONE_DAY_MILLIS)) {
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 if (!isFinishing()) {
-                    SmartRate.Rate(MainActivity.this, "قيم تجربتك معنا!", "نحن نسعى لجعل تطبيق المحفظ أفضل كل يوم، ويساعدنا تقييمك في تقديم تجربة مميزة لك!", "قيم الآن", "دعمك لنا يحفزنا! اترك لنا تقييماً رائعاً على جوجل بلاي", "اضغط هنا للتقييم", "ليس الآن", "شكراً لدعمك!", Color.parseColor("#305A23"), 2);
+                    SmartRate.Rate(MainActivity.this, "قيم تجربتك معنا!",
+                            "نحن نسعى لجعل تطبيق المحفظ أفضل كل يوم، ويساعدنا تقييمك في تقديم تجربة مميزة لك!",
+                            "قيم الآن", "دعمك لنا يحفزنا! اترك لنا تقييماً رائعاً على جوجل بلاي",
+                            "اضغط هنا للتقييم", "ليس الآن", "شكراً لدعمك!",
+                            Color.parseColor("#305A23"), 2);
 
-                    // Update the last rating prompt timestamp
-                    saveLastPromptTime();
+                    // Update rating data (date + number of times)
+                    saveLastPromptData(promptCount + 1);
                 }
-            }, 40000);
+            }, 5000);
         }
     }
 
-    // Save the last time the rating prompt was shown
-    private void saveLastPromptTime() {
+    // Save the time of the last request and the number of times it was shown
+    private void saveLastPromptData(int newCount) {
         SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
-        prefs.edit().putLong("last_rating_prompt", System.currentTimeMillis()).apply();
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putLong("last_rating_prompt", System.currentTimeMillis());
+        editor.putInt("rating_prompt_count", newCount);
+        editor.apply();
     }
 
     private void setupToolbar() {

@@ -24,7 +24,6 @@ import java.util.List;
 
 public class LearningActivity extends AppCompatActivity implements AyasAdapter.Interaction, JcPlayerManagerListener {
 
-    private final List<Ayah> selectedAyasList = new ArrayList<>();
     private AyasAdapter ayasAdapter;
     private LearningData learningData;
     private TextView reciterName;
