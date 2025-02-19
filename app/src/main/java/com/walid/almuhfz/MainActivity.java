@@ -3,7 +3,9 @@ package com.walid.almuhfz;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -286,9 +288,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void showLoading() {
-        if (loadingDialog != null) {
-            hideLoading();
+        if (loadingDialog != null && loadingDialog.isShowing()) {
+            return;
         }
+
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+
         loadingDialog = new Dialog(this);
         loadingDialog.setContentView(R.layout.loading_dialog);
         loadingDialog.setCancelable(false);
@@ -297,7 +304,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void hideLoading() {
         if (loadingDialog != null && loadingDialog.isShowing()) {
-            loadingDialog.dismiss();
+            Context context = loadingDialog.getContext();
+
+            if (context instanceof Activity activity) { // Check if the context is an activity
+                if (!activity.isFinishing() && !activity.isDestroyed()) {
+                    loadingDialog.dismiss();
+                }
+            } else {
+                loadingDialog.dismiss();
+            }
         }
     }
 
