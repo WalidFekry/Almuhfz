@@ -171,11 +171,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (promptCount < MAX_PROMPT_COUNT && (currentTime - lastPromptTime >= ONE_DAY_MILLIS)) {
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 if (!isFinishing()) {
-                    SmartRate.Rate(MainActivity.this, "قيم تجربتك معنا!",
-                            "نحن نسعى لجعل تطبيق المحفظ أفضل كل يوم، ويساعدنا تقييمك في تقديم تجربة مميزة لك!",
-                            "قيم الآن", "دعمك لنا يحفزنا! اترك لنا تقييماً رائعاً على جوجل بلاي",
-                            "اضغط هنا للتقييم", "ليس الآن", "شكراً لدعمك!",
-                            Color.parseColor("#305A23"), 2);
+                    SmartRate.Rate(MainActivity.this, "قيم تجربتك معنا!", "نحن نسعى لجعل تطبيق المحفظ أفضل كل يوم، ويساعدنا تقييمك في تقديم تجربة مميزة لك!", "قيم الآن", "دعمك لنا يحفزنا! اترك لنا تقييماً رائعاً على جوجل بلاي", "اضغط هنا للتقييم", "ليس الآن", "شكراً لدعمك!", Color.parseColor("#305A23"), 2);
 
                     // Update rating data (date + number of times)
                     saveLastPromptData(promptCount + 1);
@@ -313,15 +309,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void hideLoading() {
         if (loadingDialog != null && loadingDialog.isShowing()) {
-            Context context = loadingDialog.getContext();
-
-            if (context instanceof Activity activity) { // Check if the context is an activity
-                if (!activity.isFinishing() && !activity.isDestroyed()) {
-                    loadingDialog.dismiss();
+            runOnUiThread(() -> { // يضمن التنفيذ على UI Thread
+                try {
+                    Context context = loadingDialog.getContext();
+                    if (context instanceof Activity activity) {
+                        if (!activity.isFinishing() && !activity.isDestroyed()) {
+                            loadingDialog.dismiss();
+                        }
+                    } else {
+                        loadingDialog.dismiss();
+                    }
+                    loadingDialog = null;
+                } catch (Exception e) {
+                    Log.e(TAG, "خطأ أثناء إغلاق الـ Dialog", e);
                 }
-            } else {
-                loadingDialog.dismiss();
-            }
+            });
         }
     }
 

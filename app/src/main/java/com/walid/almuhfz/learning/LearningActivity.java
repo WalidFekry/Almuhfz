@@ -64,14 +64,18 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
         ayasRecyclerView.setLayoutManager(new LinearLayoutManager((this)));
         reciterName.setText(learningData.getSelectedReciter().getName());
 
-
         ArrayList<JcAudio> jcAudios = new ArrayList<>();
         JcAudio firstAudio = getNextAudio(0);
+
         if (firstAudio != null) {
             jcAudios.add(firstAudio);
         }
 
-        player.initPlaylist(jcAudios, this);
+        if (!jcAudios.isEmpty()) {
+            player.initPlaylist(jcAudios, this);
+        } else {
+            showMessage("القائمة فارغة، لن يتم تشغيل المشغل.");
+        }
 
         player.findViewById(R.id.btnNext).setOnClickListener(view -> {
             if (currentPlayIndex == learningData.getSoraDetails().getAyahs().size() - 1) {
