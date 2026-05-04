@@ -3,6 +3,7 @@ package com.walid.almuhfz.learning;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,9 +17,13 @@ import com.example.jean.jcplayer.general.JcStatus;
 import com.example.jean.jcplayer.model.JcAudio;
 import com.example.jean.jcplayer.view.JcPlayerView;
 import com.walid.almuhfz.R;
+import com.walid.almuhfz.db.entity.AyahEntity;
+import com.walid.almuhfz.db.mapper.AyahMapper;
+import com.walid.almuhfz.db.QuranDatabase;
 import com.walid.almuhfz.learning.models.Ayah;
 import com.walid.almuhfz.learning.models.LearningData;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,18 +45,62 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
 
         getIntentData();
         initViews();
-
     }
 
     private void getIntentData() {
-
         learningData = (LearningData) getIntent().getSerializableExtra("learning_data");
-        List<Ayah> selectedAyasList = new ArrayList<>();
-        for (int i = 0; i < learningData.getSoraDetails().getAyahs().size(); i++) {
-            if (i >= (learningData.getSelectedFrom() - 1) && i <= (learningData.getSelectedTo() - 1))
-                selectedAyasList.add(learningData.getSoraDetails().getAyahs().get(i));
+        int surahNumber = learningData.getSoraDetails().getNumber();
+
+        new Thread(() -> {
+            List<AyahEntity> roomData = QuranDatabase.getInstance(this).quranDao().getAyahsBySurah(surahNumber);
+            List<Ayah> selectedAyasList = new ArrayList<>();
+
+            if (roomData != null && !roomData.isEmpty()) {
+                int from = learningData.getSelectedFrom();
+                int to = learningData.getSelectedTo();
+                for (AyahEntity entity : roomData) {
+                    if (entity.getNumberInSurah() >= from && entity.getNumberInSurah() <= to) {
+                        selectedAyasList.add(AyahMapper.fromEntity(entity));
+                    }
+                }
+            } else {
+                for (int i = 0; i < learningData.getSoraDetails().getAyahs().size(); i++) {
+                    if (i >= (learningData.getSelectedFrom() - 1) && i <= (learningData.getSelectedTo() - 1)) {
+                        selectedAyasList.add(learningData.getSoraDetails().getAyahs().get(i));
+                    }
+                }
+            }
+            Log.d("walid fekry", "selectedAyasList: " + selectedAyasList.size());
+            learningData.getSoraDetails().setAyahs(selectedAyasList);
+            runOnUiThread(() -> {
+                setAdapter();
+                playAudio();
+            });
+        }).start();
+    }
+
+    private void playAudio() {
+        ArrayList<JcAudio> jcAudios = new ArrayList<>();
+        JcAudio firstAudio = getNextAudio(0);
+        if (firstAudio != null) {
+            jcAudios.add(firstAudio);
         }
-        learningData.getSoraDetails().setAyahs(selectedAyasList);
+        if (!jcAudios.isEmpty()) {
+            player.initPlaylist(jcAudios, this);
+        } else {
+            showMessage("القائمة فارغة، لن يتم تشغيل المشغل.");
+        }
+        JcAudio audioToPlay = getNextAudio(currentPlayIndex);
+        if (audioToPlay != null) {
+            player.playAudio(audioToPlay);
+        }
+    }
+
+    private void setAdapter() {
+        ayasAdapter = new AyasAdapter(learningData.getSoraDetails().getAyahs(), this);
+        ayasRecyclerView.setLayoutManager(new LinearLayoutManager((this)));
+        ayasRecyclerView.setAdapter(ayasAdapter);
+        reciterName.setText(learningData.getSelectedReciter().getName());
     }
 
     private void initViews() {
@@ -59,24 +108,6 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
         reciterName = findViewById(R.id.reciterName);
         ayasRecyclerView = findViewById(R.id.ayasRecyclerView);
         player = findViewById(R.id.jcplayer);
-        ayasAdapter = new AyasAdapter(learningData.getSoraDetails().getAyahs(), this);
-        ayasRecyclerView.setAdapter(ayasAdapter);
-        ayasRecyclerView.setLayoutManager(new LinearLayoutManager((this)));
-        reciterName.setText(learningData.getSelectedReciter().getName());
-
-        ArrayList<JcAudio> jcAudios = new ArrayList<>();
-        JcAudio firstAudio = getNextAudio(0);
-
-        if (firstAudio != null) {
-            jcAudios.add(firstAudio);
-        }
-
-        if (!jcAudios.isEmpty()) {
-            player.initPlaylist(jcAudios, this);
-        } else {
-            showMessage("القائمة فارغة، لن يتم تشغيل المشغل.");
-        }
-
         player.findViewById(R.id.btnNext).setOnClickListener(view -> {
             if (currentPlayIndex == learningData.getSoraDetails().getAyahs().size() - 1) {
                 currentPlayIndex = 0;
@@ -121,20 +152,11 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
             ayasAdapter.setSelectedAyaIndex(currentPlayIndex);
 
         });
-
-
-        final Handler handler = new Handler(Looper.getMainLooper());
-        handler.postDelayed(() -> runOnUiThread(() -> {
-            JcAudio audioToPlay = getNextAudio(currentPlayIndex);
-            if (audioToPlay != null) {
-                player.playAudio(audioToPlay);
-            }
-        }), 500);
-
     }
 
     private JcAudio getNextAudio(int index) {
         List<Ayah> ayahs = learningData.getSoraDetails().getAyahs();
+        Log.d("walid fekry", "ayahs: " + ayahs.size());
 
         if (ayahs == null || ayahs.isEmpty()) {
             showMessage("خطأ: قائمة الآيات فارغة أو لا تحتوي على أي شيء.");
@@ -146,7 +168,19 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
             return null;
         }
 
-        return JcAudio.createFromURL(learningData.getSoraDetails().getAyahs().get(index).getText(), learningData.getSoraDetails().getAyahs().get(index).getAudio());
+        Ayah ayah = ayahs.get(index);
+        String audioUrl = ayah.getAudio();
+
+        File localFile = new File(getApplicationContext().getExternalFilesDir(null), "QuranAudio/" + learningData.getSelectedReciter().getIdentifier() + "/" + learningData.getSoraDetails().getEnglishName() + "_ayah_" + ayah.getNumberInSurah() + ".mp3");
+        if (localFile.exists()) {
+            Log.d("walid fekry", "local audio: " + localFile);
+
+            return JcAudio.createFromFilePath(ayah.getText(), localFile.getAbsolutePath());
+        } else {
+            Log.d("walid fekry", "online audio: " + localFile);
+
+            return JcAudio.createFromURL(ayah.getText(), audioUrl);
+        }
     }
 
 

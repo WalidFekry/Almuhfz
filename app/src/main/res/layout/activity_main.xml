@@ -3,7 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_gravity="center"
     android:background="@drawable/around_line3"
     android:gravity="center"
@@ -17,10 +16,10 @@
 
 
         <androidx.core.widget.NestedScrollView
-            android:layout_marginTop="16dp"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
+            android:layout_marginTop="16dp"
             android:gravity="center"
             android:layoutDirection="rtl"
             android:orientation="vertical">
@@ -36,17 +35,17 @@
 
 
                 <androidx.appcompat.widget.AppCompatTextView
-                    android:layout_marginTop="40dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="40dp"
                     android:text="القارئ"
                     android:textColor="@color/white"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
                 <androidx.appcompat.widget.AppCompatTextView
-                    android:layout_width="match_parent"
                     android:id="@+id/reciter_text_view"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_margin="16dp"
                     android:background="@drawable/value_background"
@@ -65,18 +64,55 @@
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
-                <androidx.appcompat.widget.AppCompatTextView
+                <androidx.appcompat.widget.LinearLayoutCompat
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="16dp"
-                    android:background="@drawable/value_background"
-                    android:gravity="center"
-                    android:id="@+id/sora_text_view"
-                    android:padding="16dp"
-                    android:text="الفاتحه"
-                    android:textColor="@color/black"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:orientation="horizontal"
+                    android:padding="16dp">
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/sora_text_view"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/value_background"
+                        android:gravity="center"
+                        android:padding="16dp"
+                        android:text="الفاتحة"
+                        android:textColor="@color/black"
+                        android:textSize="18sp"
+                        android:layout_marginEnd="10dp"
+                        android:textStyle="bold" />
+
+                    <androidx.appcompat.widget.AppCompatImageButton
+                        android:id="@+id/download_button"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="تحميل السورة"
+                        android:padding="8dp"
+                        android:src="@drawable/download"
+                        android:tint="@color/black" />
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+                <ProgressBar
+                    android:id="@+id/downloadProgressBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:max="100"
+                    android:progress="0"
+                    android:visibility="gone"
+                    />
+
+                <TextView
+                    android:id="@+id/downloadStatusText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="جاري التحميل..."
+                    android:visibility="gone"
+                    android:layout_marginTop="8dp"/>
+
 
                 <androidx.appcompat.widget.LinearLayoutCompat
                     android:layout_width="match_parent"
@@ -99,10 +135,10 @@
                             android:textStyle="bold" />
 
                         <androidx.appcompat.widget.AppCompatTextView
+                            android:id="@+id/fromAyaTextView"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_margin="16dp"
-                            android:id="@+id/fromAyaTextView"
                             android:background="@drawable/value_background"
                             android:gravity="center"
                             android:padding="16dp"
@@ -128,13 +164,13 @@
                             android:textStyle="bold" />
 
                         <androidx.appcompat.widget.AppCompatTextView
+                            android:id="@+id/toAyaTextView"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_margin="16dp"
                             android:background="@drawable/value_background"
                             android:gravity="center"
                             android:padding="16dp"
-                            android:id="@+id/toAyaTextView"
                             android:text="1"
                             android:textColor="@color/black"
                             android:textSize="18sp"
@@ -153,10 +189,10 @@
                     android:textStyle="bold" />
 
                 <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/repeatAyaTextView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_margin="16dp"
-                    android:id="@+id/repeatAyaTextView"
                     android:background="@drawable/value_background"
                     android:gravity="center"
                     android:padding="16dp"
@@ -174,54 +210,53 @@
                     android:textStyle="bold" />
 
                 <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/repeatSoraTextView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_margin="16dp"
                     android:background="@drawable/value_background"
                     android:gravity="center"
                     android:padding="16dp"
-                    android:id="@+id/repeatSoraTextView"
                     android:text="بدون تكرار"
                     android:textColor="@color/black"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/startLearn"
                     android:layout_width="match_parent"
-                    android:visibility="gone"
                     android:layout_height="wrap_content"
                     android:layout_margin="16dp"
                     android:background="@drawable/value_background"
-                    android:gravity="center"
                     android:backgroundTint="@color/red"
+                    android:gravity="center"
                     android:padding="16dp"
-                    android:id="@+id/startLearn"
                     android:text="ابدأ التعلم"
                     android:textColor="@color/white"
                     android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:visibility="gone" />
 
                 <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/startLearnDone"
                     android:layout_width="match_parent"
-                    android:visibility="visible"
                     android:layout_height="wrap_content"
                     android:layout_margin="16dp"
                     android:background="@drawable/value_background"
-                    android:gravity="center"
                     android:backgroundTint="@color/background_dark"
+                    android:gravity="center"
                     android:padding="16dp"
-                    android:id="@+id/startLearnDone"
                     android:text="جاري التحميل .."
                     android:textColor="@color/white"
                     android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:visibility="visible" />
 
                 <ImageView
                     android:id="@+id/rating"
                     android:layout_width="match_parent"
                     android:layout_height="100dp"
-                    android:src="@drawable/rating"/>
-
+                    android:src="@drawable/rating" />
 
 
             </androidx.appcompat.widget.LinearLayoutCompat>

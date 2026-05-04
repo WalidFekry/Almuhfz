@@ -24,6 +24,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,6 +32,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -39,7 +41,14 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.walid.almuhfz.db.QuranDatabase;
+import com.walid.almuhfz.db.entity.AyahEntity;
+import com.walid.almuhfz.db.entity.ReciterEntity;
+import com.walid.almuhfz.db.entity.SurahEntity;
+import com.walid.almuhfz.db.mapper.AyahMapper;
+import com.walid.almuhfz.db.mapper.ReciterMapper;
 import com.walid.almuhfz.learning.LearningActivity;
+import com.walid.almuhfz.learning.models.Ayah;
 import com.walid.almuhfz.learning.models.LearningData;
 import com.walid.almuhfz.learning.models.Reciter;
 import com.walid.almuhfz.learning.models.ReciterResponse;
@@ -50,12 +59,19 @@ import com.walid.almuhfz.learning.networking.QuranUtils;
 import com.walid.almuhfz.learning.networking.RetrofitClient;
 import com.walid.almuhfz.notifications_messages.NotificationsMessagesActivity;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import guy4444.smartrate.SmartRate;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -68,8 +84,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final long ONE_DAY_MILLIS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
     private static final int MAX_PROMPT_COUNT = 10; // Maximum number of times to show
     private final List<Sora> soraList = QuranUtils.getSoraList();
+    private final Handler handler = new Handler(Looper.getMainLooper());
     ImageView rateApp;
     List<Reciter> reciterList;
+    String englishName;
     SoraDetails soraDetails;
     TextView reciterTextView, soraTextView, startLearn, fromAyaTextView, repeatSoraTextView, repeatAyaTextView, toAyaTextView, startLearnDone;
     int lastReciter = 0;
@@ -79,8 +97,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     int selectedTo = 1;
     int repeatAya = 1;
     int repeatSora = 1;
+    AppCompatImageButton downloadButton;
+    ProgressBar downloadProgressBar;
+    TextView downloadStatusText;
     private Dialog loadingDialog;
-    private final Handler handler = new Handler(Looper.getMainLooper());
     private Runnable ratingRunnable;
 
     @Override
@@ -173,17 +193,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (promptCount < MAX_PROMPT_COUNT && (currentTime - lastPromptTime >= ONE_DAY_MILLIS)) {
             ratingRunnable = () -> {
                 if (!isFinishing()) {
-                    SmartRate.Rate(MainActivity.this,
-                            "قيم تجربتك معنا!",
-                            "نحن نسعى لجعل تطبيق المحفظ أفضل كل يوم، ويساعدنا تقييمك في تقديم تجربة مميزة لك!",
-                            "قيم الآن",
-                            "دعمك لنا يحفزنا! اترك لنا تقييماً رائعاً على جوجل بلاي",
-                            "اضغط هنا للتقييم",
-                            "ليس الآن",
-                            "شكراً لدعمك!",
-                            Color.parseColor("#305A23"),
-                            2
-                    );
+                    SmartRate.Rate(MainActivity.this, "قيم تجربتك معنا!", "نحن نسعى لجعل تطبيق المحفظ أفضل كل يوم، ويساعدنا تقييمك في تقديم تجربة مميزة لك!", "قيم الآن", "دعمك لنا يحفزنا! اترك لنا تقييماً رائعاً على جوجل بلاي", "اضغط هنا للتقييم", "ليس الآن", "شكراً لدعمك!", Color.parseColor("#305A23"), 2);
 
                     // Update rating prompt data (last prompt time + prompt count)
                     saveLastPromptData(promptCount + 1);
@@ -222,8 +232,136 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         shapedNavigationView.setNavigationItemSelectedListener(this);
     }
 
+    public File createSurahFolder(Context context) {
+        File folder = new File(context.getExternalFilesDir(null), "QuranAudio/" + selectedReciter.getIdentifier());
+        if (!folder.exists()) {
+            folder.mkdirs();
+        }
+        return folder;
+    }
+
+    public void downloadAyahAudio(String url, File outputFile, Runnable onComplete) {
+        Call<ResponseBody> call = RetrofitClient.getInstance().getApi().downloadFileWithDynamicUrl(url);
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    boolean writtenToDisk = writeResponseBodyToDisk(response.body(), outputFile);
+                    if (writtenToDisk) {
+                        Log.d("Download", "File downloaded: " + outputFile.getAbsolutePath());
+                        if (onComplete != null) onComplete.run();
+                    } else {
+                        Log.e("Download", "Failed to write the file to disk");
+                    }
+                } else {
+                    Log.e("Download", "Server error: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Log.e("Download", "Download failed: " + t.getMessage());
+            }
+        });
+    }
+
+    private boolean writeResponseBodyToDisk(ResponseBody body, File outputFile) {
+        try (InputStream inputStream = body.byteStream(); OutputStream outputStream = new FileOutputStream(outputFile)) {
+
+            byte[] fileReader = new byte[4096];
+            int read;
+
+            while ((read = inputStream.read(fileReader)) != -1) {
+                outputStream.write(fileReader, 0, read);
+            }
+
+            outputStream.flush();
+            return true;
+        } catch (IOException e) {
+            Log.e("Download", "IOException writing file: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public void downloadSurahAudio(Context context, List<Ayah> ayahs) {
+        File folder = createSurahFolder(context);
+
+        int totalAyahs = ayahs.size();
+        AtomicInteger downloadedCount = new AtomicInteger(0);
+
+        // Show progress
+        downloadProgressBar.setVisibility(View.VISIBLE);
+        downloadStatusText.setVisibility(View.VISIBLE);
+        downloadProgressBar.setProgress(0);
+        downloadStatusText.setText("0 / " + totalAyahs);
+
+        for (Ayah ayah : ayahs) {
+            String url = ayah.getAudio();
+            String fileName = soraDetails.getEnglishName() + "_ayah_" + ayah.getNumberInSurah() + ".mp3";
+            File file = new File(folder, fileName);
+
+            if (!file.exists()) {
+                downloadAyahAudio(url, file, () -> {
+                    int current = downloadedCount.incrementAndGet();
+                    int progress = (int) ((current / (float) totalAyahs) * 100);
+
+                    runOnUiThread(() -> {
+                        downloadProgressBar.setProgress(progress);
+                        downloadStatusText.setText(current + " / " + totalAyahs);
+                        if (current == totalAyahs) {
+                            Toast.makeText(context, "تم تحميل السورة بالكامل", Toast.LENGTH_LONG).show();
+                            downloadProgressBar.setVisibility(View.GONE);
+                            downloadStatusText.setVisibility(View.GONE);
+                        }
+                    });
+                });
+            } else {
+                int current = downloadedCount.incrementAndGet();
+                int progress = (int) ((current / (float) totalAyahs) * 100);
+                runOnUiThread(() -> {
+                    downloadProgressBar.setProgress(progress);
+                    downloadStatusText.setText(current + " / " + totalAyahs);
+                    if (current == totalAyahs) {
+                        Toast.makeText(context, "تم تحميل السورة بالكامل", Toast.LENGTH_LONG).show();
+                        downloadProgressBar.setVisibility(View.GONE);
+                        downloadStatusText.setVisibility(View.GONE);
+                    }
+                });
+            }
+        }
+
+        // Save to Room in background thread
+        new Thread(() -> {
+            // 1. Save reciter
+            ReciterEntity reciter = new ReciterEntity(selectedReciter.getIdentifier(), selectedReciter.getName());
+            QuranDatabase.getInstance(this).quranDao().insertReciter(reciter);
+
+            // 2. Save surah
+            SurahEntity surah = new SurahEntity(soraDetails.getNumber(), soraDetails.getName(), reciter.getId(), soraDetails.getEnglishName());
+            long surahId = QuranDatabase.getInstance(this).quranDao().insertSurah(surah);
+
+            if (surahId == -1) {
+                // السورة موجودة قبل كده
+                return;
+            }
+
+            // 3. Save ayahs
+            List<AyahEntity> entities = new ArrayList<>();
+            for (Ayah ayah : soraDetails.getAyahs()) {
+                AyahEntity entity = new AyahEntity(ayah.getNumber(), ayah.getNumberInSurah(), ayah.getText(), ayah.getAudio(), (int) surahId);
+                entities.add(entity);
+            }
+
+            QuranDatabase.getInstance(this).quranDao().insertAyahs(entities);
+        }).start();
+
+    }
 
     private void setListeners() {
+        downloadButton.setOnClickListener(view -> {
+            downloadSurahAudio(this, soraDetails.getAyahs());
+        });
+
         reciterTextView.setOnClickListener(view -> {
             selectReciter();
         });
@@ -269,6 +407,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         startLearn = findViewById(R.id.startLearn);
         rateApp = findViewById(R.id.rating);
         startLearnDone = findViewById(R.id.startLearnDone);
+        downloadButton = findViewById(R.id.download_button);
+        downloadProgressBar = findViewById(R.id.downloadProgressBar);
+        downloadStatusText = findViewById(R.id.downloadStatusText);
     }
 
     private void getListOfReciters() {
@@ -300,10 +441,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onFailure(@NonNull Call<ReciterResponse> call, @NonNull Throwable t) {
-                handleError("يبدو أن هناك مشكلة في الاتصال بالإنترنت. يرجى التحقق من اتصالك وحاول مرة أخرى.");
+                getLocalReciters();
                 Log.e(TAG, "API call failed: " + t.getLocalizedMessage());
             }
         });
+    }
+
+    private void getLocalReciters() {
+        new Thread(() -> {
+            List<ReciterEntity> downloadedEntities = QuranDatabase.getInstance(getApplicationContext()).quranDao().getDownloadedReciters();
+
+            List<Reciter> downloadedReciters = new ArrayList<>();
+            for (ReciterEntity entity : downloadedEntities) {
+                downloadedReciters.add(ReciterMapper.fromEntity(entity));
+            }
+            runOnUiThread(() -> {
+                if (downloadedReciters.isEmpty()) {
+                    handleError("يبدو أن هناك مشكلة في الاتصال بالإنترنت. يرجى التحقق من اتصالك وحاول مرة أخرى.");
+                } else {
+                    reciterList = downloadedReciters;
+                    updateUIWithReciter(reciterList.get(0));
+                }
+            });
+        }).start();
+
     }
 
     private void showLoading() {
@@ -415,10 +576,49 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onFailure(@NonNull Call<SoraDetailsResponse> call, @NonNull Throwable t) {
-                handleError("يبدو أن هناك مشكلة في الاتصال بالإنترنت. يرجى التحقق من اتصالك وحاول مرة أخرى.");
+                getLocalSoraDetails();
                 Log.e(TAG, "API call failed: " + t.getLocalizedMessage());
             }
         });
+    }
+
+    private void getLocalSoraDetails() {
+        new Thread(() -> {
+            List<SurahEntity> downloadedSurahs = QuranDatabase.getInstance(this).quranDao().getDownloadedSurahsByReciter(selectedReciter.getIdentifier());
+
+            soraList.clear();
+            for (SurahEntity surahEntity : downloadedSurahs) {
+                soraList.add(new Sora(surahEntity.getSurahNumber(), surahEntity.getSurahName(), surahEntity.getEnglishName()));
+            }
+
+            List<AyahEntity> roomData = QuranDatabase.getInstance(this).quranDao().getAyahsBySurah(selectedSoraNumber);
+            List<Ayah> selectedAyasList = new ArrayList<>();
+            for (AyahEntity entity : roomData) {
+                selectedAyasList.add(AyahMapper.fromEntity(entity));
+            }
+
+            runOnUiThread(() -> {
+                if (downloadedSurahs.isEmpty()) {
+                    handleError("يبدو أن هناك مشكلة في الاتصال بالإنترنت. يرجى التحقق من اتصالك وحاول مرة أخرى.");
+                } else {
+                    int ayahCount = selectedAyasList.size();
+                    toAyaTextView.setText(String.valueOf(ayahCount));
+                    selectedTo = ayahCount;
+                    fromAyaTextView.setText("1");
+                    soraDetails = new SoraDetails();
+                    soraDetails.setNumber(selectedSoraNumber);
+                    soraDetails.setAyahs(selectedAyasList);
+                    if (englishName == null) {
+                        soraDetails.setEnglishName(soraList.get(0).getEnglishName());
+                    } else {
+                        soraDetails.setEnglishName(englishName);
+                    }
+                    hideLoading();
+                    setViewsState(true, 1f);
+                    toggleLearnButtons(false);
+                }
+            });
+        }).start();
     }
 
     private void handleError(String message) {
@@ -453,9 +653,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     private void selectSora() {
-
-        CharSequence[] items = new CharSequence[114];
-        for (int i = 0; i <= 113; i++) {
+        CharSequence[] items = new CharSequence[soraList.size()];
+        for (int i = 0; i <= soraList.size() - 1; i++) {
             items[i] = soraList.get(i).getName();
         }
         AlertDialog.Builder adb = new AlertDialog.Builder(this);
@@ -463,6 +662,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             String name = soraList.get(n).getName();
             soraTextView.setText(name);
             selectedSoraNumber = n + 1;
+            englishName = soraList.get(n).getEnglishName();
             showLoading();
             toggleLearnButtons(true);
             getSoraDetails();

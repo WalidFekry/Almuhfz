@@ -53,6 +53,9 @@ public class Ayah implements Serializable {
         // Constructor فارغ
     }
 
+    public Ayah(int number, int numberInSurah, String text, String audio) {
+    }
+
     // 🟢 Getter & Setter Methods
     public Integer getNumber() {
         return number;
