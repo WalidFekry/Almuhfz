@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class AyasAdapter extends RecyclerView.Adapter<AyasAdapter.Holder> {
-    private final NumberFormat nf = NumberFormat.getInstance(new Locale("ar", "EG"));
+    private final NumberFormat nf = NumberFormat.getInstance(Locale.forLanguageTag("ar-EG"));
     private int selectedAyaIndex = RecyclerView.NO_POSITION;
     private final List<Ayah> ayahList;
     private final Interaction interaction;
@@ -40,37 +40,33 @@ public class AyasAdapter extends RecyclerView.Adapter<AyasAdapter.Holder> {
     public void onBindViewHolder(@NonNull Holder holder, int position) {
         int adapterPosition = holder.getBindingAdapterPosition();
 
-        // تجنب حدوث OutOfBoundsException
-        if (adapterPosition == RecyclerView.NO_POSITION) {
+        if (adapterPosition == RecyclerView.NO_POSITION || ayahList == null || adapterPosition >= ayahList.size()) {
             return;
         }
 
         Ayah currentAyah = ayahList.get(adapterPosition);
-        holder.ayaTextView.setText(nf.format(position + 1) + " - " + currentAyah.getText());
+        String ayahText = (currentAyah != null && currentAyah.getText() != null) ? currentAyah.getText() : "";
+        holder.ayaTextView.setText(nf.format(position + 1) + " - " + ayahText);
 
-        // تغيير لون النص حسب العنصر المحدد
         int textColor = (selectedAyaIndex != RecyclerView.NO_POSITION && selectedAyaIndex == adapterPosition) ?
                 ContextCompat.getColor(holder.ayaTextView.getContext(), R.color.black) :
                 ContextCompat.getColor(holder.ayaTextView.getContext(), R.color.white);
         holder.ayaTextView.setTextColor(textColor);
 
-        // تعيين حدث النقر
         holder.ayaTextView.setOnClickListener(view -> {
             int newPosition = holder.getBindingAdapterPosition();
 
-            // تجنب النقر على عنصر غير صالح
-            if (newPosition == RecyclerView.NO_POSITION) {
+            if (newPosition == RecyclerView.NO_POSITION || ayahList == null || newPosition >= ayahList.size()) {
                 return;
             }
 
-            // إعلام المستمع (Listener)
-            interaction.onAyaClicked(ayahList.get(newPosition), newPosition);
+            if (interaction != null) {
+                interaction.onAyaClicked(ayahList.get(newPosition), newPosition);
+            }
 
-            // تحديث العنصر المحدد
             int oldSelectedIndex = selectedAyaIndex;
             selectedAyaIndex = newPosition;
 
-            // تحديث العناصر القديمة والجديدة فقط بدلاً من إعادة تحميل القائمة بالكامل
             if (oldSelectedIndex != RecyclerView.NO_POSITION) {
                 notifyItemChanged(oldSelectedIndex);
             }
@@ -80,18 +76,19 @@ public class AyasAdapter extends RecyclerView.Adapter<AyasAdapter.Holder> {
 
     @Override
     public int getItemCount() {
-        return ayahList.size();
+        return (ayahList != null) ? ayahList.size() : 0;
     }
 
     public void setSelectedAyaIndex(int newIndex) {
         int oldSelectedIndex = selectedAyaIndex;
         selectedAyaIndex = newIndex;
 
-        // تحديث العناصر المتغيرة فقط
         if (oldSelectedIndex != RecyclerView.NO_POSITION) {
             notifyItemChanged(oldSelectedIndex);
         }
-        notifyItemChanged(selectedAyaIndex);
+        if (selectedAyaIndex != RecyclerView.NO_POSITION) {
+            notifyItemChanged(selectedAyaIndex);
+        }
     }
 
     public interface Interaction {

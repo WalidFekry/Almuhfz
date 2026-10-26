@@ -1,20 +1,14 @@
 package com.walid.almuhfz.notifications_messages.adapter;
 
-import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
-import android.content.res.TypedArray;
-import android.graphics.Color;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,7 +23,6 @@ import com.walid.almuhfz.notifications_messages.model.NotificationModel;
 import net.steamcrafted.materialiconlib.MaterialIconView;
 
 import java.util.List;
-import java.util.Random;
 
 public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.NotificationViewHolder> {
 
@@ -48,27 +41,41 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
     @Override
     public void onBindViewHolder(@NonNull final NotificationViewHolder holder, int position) {
+        if (list == null || position < 0 || position >= list.size()) return;
+
         NotificationModel notification = list.get(position);
+        if (notification == null) return;
+
         Context itemContext = holder.itemView.getContext();
 
-        holder.title.setText(notification.getTitle().replace("_", "\n"));
+        String rawTitle = (notification.getTitle() != null) ? notification.getTitle() : "";
+        holder.title.setText(rawTitle.replace("_", "\n"));
         holder.messageNumber.setText(String.valueOf(notification.getId()));
 
-        holder.messageTime.setText(notification.getCreatedAt() != null ?
-                notification.getCreatedAt().split(" ")[0] : "2025-02-14");
+        String timeText = "2025-02-14";
+        if (notification.getCreatedAt() != null && !notification.getCreatedAt().isEmpty()) {
+            String[] parts = notification.getCreatedAt().split(" ");
+            if (parts.length > 0) {
+                timeText = parts[0];
+            }
+        }
+        holder.messageTime.setText(timeText);
 
         setClickListener(holder.shareButton, v -> shareNotification(itemContext, notification));
         setClickListener(holder.starButton, v -> openLink(itemContext, "https://t.co/XerG0QVIvi"));
-        setClickListener(holder.whatsappButton, v -> shareOnWhatsApp(itemContext, notification.getTitle()));
-        setClickListener(holder.copyButton, v -> copyToClipboard(itemContext, notification.getTitle()));
-        setClickListener(holder.facebookButton, v -> shareOnFacebook(itemContext, notification.getTitle()));
+        setClickListener(holder.whatsappButton, v -> shareOnWhatsApp(itemContext, rawTitle));
+        setClickListener(holder.copyButton, v -> copyToClipboard(itemContext, rawTitle));
+        setClickListener(holder.facebookButton, v -> shareOnFacebook(itemContext, rawTitle));
     }
 
     private void setClickListener(View view, View.OnClickListener listener) {
-        view.setOnClickListener(listener);
+        if (view != null) {
+            view.setOnClickListener(listener);
+        }
     }
 
     private void shareOnFacebook(Context context, String text) {
+        if (context == null) return;
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
         intent.setPackage("com.facebook.katana");
@@ -80,21 +87,27 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         }
     }
 
-
     private void shareNotification(Context context, NotificationModel notification) {
+        if (context == null || notification == null) return;
+        String rawTitle = (notification.getTitle() != null) ? notification.getTitle() : "";
         Intent sendIntent = new Intent(Intent.ACTION_SEND);
         sendIntent.setType("text/plain");
         sendIntent.putExtra(Intent.EXTRA_SUBJECT, "تطبيق (المُحفظ)");
-        sendIntent.putExtra(Intent.EXTRA_TEXT, notification.getTitle() + "\n" +
+        sendIntent.putExtra(Intent.EXTRA_TEXT, rawTitle + "\n" +
                 "تم النسخ من تطبيق المٌحقظ 💙 👇 https://t.co/XerG0QVIvi \n");
         context.startActivity(Intent.createChooser(sendIntent, "مشاركة نصوص من تطبيق المُحفظ:"));
     }
 
     private void openLink(Context context, String url) {
-        context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        if (context == null || url == null) return;
+        try {
+            context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        } catch (Exception ignored) {
+        }
     }
 
     private void shareOnWhatsApp(Context context, String text) {
+        if (context == null) return;
         Intent whatsappIntent = new Intent(Intent.ACTION_SEND);
         whatsappIntent.setType("text/plain");
         whatsappIntent.setPackage("com.whatsapp");
@@ -108,15 +121,18 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     }
 
     private void copyToClipboard(Context context, String text) {
+        if (context == null) return;
         ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-        ClipData clip = ClipData.newPlainText("", text + "\n" + "تم نسخ هذا النص من تطبيق المُحفظ ^_^");
-        clipboard.setPrimaryClip(clip);
-        Toast.makeText(context, "تم نسخ النص - قم بمشاركته الآن مع أصدقائك", Toast.LENGTH_LONG).show();
+        if (clipboard != null) {
+            ClipData clip = ClipData.newPlainText("", text + "\n" + "تم نسخ هذا النص من تطبيق المُحفظ ^_^");
+            clipboard.setPrimaryClip(clip);
+            Toast.makeText(context, "تم نسخ النص - قم بمشاركته الآن مع أصدقائك", Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
     public int getItemCount() {
-        return list.size();
+        return (list != null) ? list.size() : 0;
     }
 
     public static class NotificationViewHolder extends RecyclerView.ViewHolder {

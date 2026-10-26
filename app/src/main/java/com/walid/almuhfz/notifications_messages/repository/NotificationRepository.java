@@ -1,15 +1,10 @@
 package com.walid.almuhfz.notifications_messages.repository;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 
 import com.walid.almuhfz.notifications_messages.api.NotificationApiService;
-import com.walid.almuhfz.notifications_messages.model.NotificationModel;
 import com.walid.almuhfz.notifications_messages.model.NotificationResponse;
 import com.walid.almuhfz.notifications_messages.network.RetrofitClient;
-
-import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -19,6 +14,7 @@ import retrofit2.Retrofit;
 public class NotificationRepository {
 
     private final NotificationApiService apiService;
+    private Call<NotificationResponse> activeCall;
 
     public NotificationRepository() {
         Retrofit retrofit = RetrofitClient.getClient();
@@ -26,10 +22,14 @@ public class NotificationRepository {
     }
 
     public void fetchNotifications(final OnNotificationsFetchedListener listener) {
-        Call<NotificationResponse> call = apiService.getAllNotificationsMessages();
-        call.enqueue(new Callback<NotificationResponse>() {
+        cancelActiveCall();
+
+        activeCall = apiService.getAllNotificationsMessages();
+        activeCall.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<NotificationResponse> call, @NonNull Response<NotificationResponse> response) {
+                if (call.isCanceled()) return;
+
                 if (response.isSuccessful() && response.body() != null) {
                     listener.onSuccess(response.body());
                 } else {
@@ -39,9 +39,17 @@ public class NotificationRepository {
 
             @Override
             public void onFailure(@NonNull Call<NotificationResponse> call, @NonNull Throwable t) {
+                if (call.isCanceled()) return;
                 listener.onFailure(t.getMessage());
             }
         });
+    }
+
+    public void cancelActiveCall() {
+        if (activeCall != null) {
+            activeCall.cancel();
+            activeCall = null;
+        }
     }
 
     public interface OnNotificationsFetchedListener {

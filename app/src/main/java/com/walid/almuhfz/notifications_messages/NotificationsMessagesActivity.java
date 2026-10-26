@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.animation.AnimationUtils;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatImageButton;
@@ -19,6 +18,7 @@ import com.walid.almuhfz.notifications_messages.model.NotificationModel;
 import com.walid.almuhfz.notifications_messages.model.NotificationResponse;
 import com.walid.almuhfz.notifications_messages.repository.NotificationRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class NotificationsMessagesActivity extends AppCompatActivity {
@@ -40,9 +40,13 @@ public class NotificationsMessagesActivity extends AppCompatActivity {
     }
 
     private void showLoading() {
-        if (loadingDialog != null) {
-            hideLoading();
+        if (loadingDialog != null && loadingDialog.isShowing()) {
+            return;
         }
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+
         loadingDialog = new Dialog(this);
         loadingDialog.setContentView(R.layout.loading_dialog);
         loadingDialog.setCancelable(false);
@@ -50,8 +54,24 @@ public class NotificationsMessagesActivity extends AppCompatActivity {
     }
 
     private void hideLoading() {
+        if (isFinishing() || isDestroyed()) {
+            if (loadingDialog != null) {
+                try {
+                    loadingDialog.dismiss();
+                } catch (Exception ignored) {
+                }
+                loadingDialog = null;
+            }
+            return;
+        }
+
         if (loadingDialog != null && loadingDialog.isShowing()) {
-            loadingDialog.dismiss();
+            try {
+                loadingDialog.dismiss();
+            } catch (Exception e) {
+                Log.e(TAG, "Error dismissing dialog", e);
+            }
+            loadingDialog = null;
         }
     }
 
@@ -74,12 +94,18 @@ public class NotificationsMessagesActivity extends AppCompatActivity {
         repository.fetchNotifications(new NotificationRepository.OnNotificationsFetchedListener() {
             @Override
             public void onSuccess(NotificationResponse notifications) {
-                updateRecyclerView(notifications.getPosts());
-                Log.d(TAG, "Fetched " + notifications.getPosts().size() + " notifications");
+                if (isFinishing() || isDestroyed()) return;
+
+                List<NotificationModel> posts = (notifications != null && notifications.getPosts() != null)
+                        ? notifications.getPosts() : new ArrayList<>();
+                updateRecyclerView(posts);
+                Log.d(TAG, "Fetched " + posts.size() + " notifications");
             }
 
             @Override
             public void onFailure(String errorMessage) {
+                if (isFinishing() || isDestroyed()) return;
+
                 hideLoading();
                 Log.e(TAG, "Error: " + errorMessage);
                 openNoInternet();
@@ -94,10 +120,19 @@ public class NotificationsMessagesActivity extends AppCompatActivity {
     }
 
     private void updateRecyclerView(List<NotificationModel> notifications) {
+        if (isFinishing() || isDestroyed()) return;
+
         if (adapter == null) {
             adapter = new NotificationAdapter(notifications);
             rec.setAdapter(adapter);
         }
-      hideLoading();
+        hideLoading();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        repository.cancelActiveCall();
+        hideLoading();
     }
 }

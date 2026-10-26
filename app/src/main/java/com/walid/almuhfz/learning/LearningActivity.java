@@ -1,5 +1,7 @@
 package com.walid.almuhfz.learning;
 
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -17,17 +19,21 @@ import com.example.jean.jcplayer.general.JcStatus;
 import com.example.jean.jcplayer.model.JcAudio;
 import com.example.jean.jcplayer.view.JcPlayerView;
 import com.walid.almuhfz.R;
+import com.walid.almuhfz.db.QuranDatabase;
 import com.walid.almuhfz.db.entity.AyahEntity;
 import com.walid.almuhfz.db.mapper.AyahMapper;
-import com.walid.almuhfz.db.QuranDatabase;
 import com.walid.almuhfz.learning.models.Ayah;
 import com.walid.almuhfz.learning.models.LearningData;
+import com.walid.almuhfz.utils.AppExecutors;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 public class LearningActivity extends AppCompatActivity implements AyasAdapter.Interaction, JcPlayerManagerListener {
+
+    private static final String TAG = "LearningActivity";
 
     private AyasAdapter ayasAdapter;
     private LearningData learningData;
@@ -38,151 +44,199 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
     private int currentRepeatAyaIndex = 1;
     private int currentRepeatSoraIndex = 1;
 
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private Runnable audioCompletedRunnable;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_learning);
 
-        getIntentData();
+        if (!initIntentData()) {
+            Toast.makeText(this, "تعذر تحميل بيانات التعلم", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
         initViews();
+        loadAyahsData();
     }
 
-    private void getIntentData() {
-        learningData = (LearningData) getIntent().getSerializableExtra("learning_data");
-        int surahNumber = learningData.getSoraDetails().getNumber();
+    private boolean initIntentData() {
+        Intent intent = getIntent();
+        if (intent == null) return false;
 
-        new Thread(() -> {
-            List<AyahEntity> roomData = QuranDatabase.getInstance(this).quranDao().getAyahsBySurah(surahNumber);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            learningData = intent.getSerializableExtra("learning_data", LearningData.class);
+        } else {
+            Serializable s = intent.getSerializableExtra("learning_data");
+            if (s instanceof LearningData) {
+                learningData = (LearningData) s;
+            }
+        }
+
+        return learningData != null && learningData.getSoraDetails() != null && learningData.getSelectedReciter() != null;
+    }
+
+    private void loadAyahsData() {
+        int surahNumber = learningData.getSoraDetails().getNumber() != null ? learningData.getSoraDetails().getNumber() : 1;
+
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            List<AyahEntity> roomData = QuranDatabase.getInstance(getApplicationContext()).quranDao().getAyahsBySurah(surahNumber);
             List<Ayah> selectedAyasList = new ArrayList<>();
 
+            int from = learningData.getSelectedFrom();
+            int to = learningData.getSelectedTo();
+
             if (roomData != null && !roomData.isEmpty()) {
-                int from = learningData.getSelectedFrom();
-                int to = learningData.getSelectedTo();
                 for (AyahEntity entity : roomData) {
                     if (entity.getNumberInSurah() >= from && entity.getNumberInSurah() <= to) {
                         selectedAyasList.add(AyahMapper.fromEntity(entity));
                     }
                 }
-            } else {
-                for (int i = 0; i < learningData.getSoraDetails().getAyahs().size(); i++) {
-                    if (i >= (learningData.getSelectedFrom() - 1) && i <= (learningData.getSelectedTo() - 1)) {
-                        selectedAyasList.add(learningData.getSoraDetails().getAyahs().get(i));
+            } else if (learningData.getSoraDetails().getAyahs() != null) {
+                List<Ayah> allAyahs = learningData.getSoraDetails().getAyahs();
+                for (int i = 0; i < allAyahs.size(); i++) {
+                    if (i >= (from - 1) && i <= (to - 1)) {
+                        selectedAyasList.add(allAyahs.get(i));
                     }
                 }
             }
-            Log.d("walid fekry", "selectedAyasList: " + selectedAyasList.size());
+
+            Log.d(TAG, "selectedAyasList size: " + selectedAyasList.size());
             learningData.getSoraDetails().setAyahs(selectedAyasList);
-            runOnUiThread(() -> {
+
+            AppExecutors.getInstance().mainThread().execute(() -> {
+                if (isFinishing() || isDestroyed()) return;
                 setAdapter();
                 playAudio();
             });
-        }).start();
+        });
     }
 
     private void playAudio() {
+        if (isFinishing() || isDestroyed()) return;
+
         ArrayList<JcAudio> jcAudios = new ArrayList<>();
         JcAudio firstAudio = getNextAudio(0);
         if (firstAudio != null) {
             jcAudios.add(firstAudio);
         }
         if (!jcAudios.isEmpty()) {
-            player.initPlaylist(jcAudios, this);
+            try {
+                player.initPlaylist(jcAudios, this);
+            } catch (Exception e) {
+                Log.e(TAG, "Error initializing player playlist", e);
+            }
         } else {
             showMessage("القائمة فارغة، لن يتم تشغيل المشغل.");
         }
         JcAudio audioToPlay = getNextAudio(currentPlayIndex);
         if (audioToPlay != null) {
-            player.playAudio(audioToPlay);
+            try {
+                player.playAudio(audioToPlay);
+            } catch (Exception e) {
+                Log.e(TAG, "Error playing audio", e);
+            }
         }
     }
 
     private void setAdapter() {
+        if (learningData.getSoraDetails().getAyahs() == null) {
+            learningData.getSoraDetails().setAyahs(new ArrayList<>());
+        }
         ayasAdapter = new AyasAdapter(learningData.getSoraDetails().getAyahs(), this);
-        ayasRecyclerView.setLayoutManager(new LinearLayoutManager((this)));
+        ayasRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         ayasRecyclerView.setAdapter(ayasAdapter);
-        reciterName.setText(learningData.getSelectedReciter().getName());
+
+        if (learningData.getSelectedReciter() != null && learningData.getSelectedReciter().getName() != null) {
+            reciterName.setText(learningData.getSelectedReciter().getName());
+        }
     }
 
     private void initViews() {
-        findViewById(R.id.back_button).setOnClickListener(v -> onBackPressed());
+        findViewById(R.id.back_button).setOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
         reciterName = findViewById(R.id.reciterName);
         ayasRecyclerView = findViewById(R.id.ayasRecyclerView);
         player = findViewById(R.id.jcplayer);
-        player.findViewById(R.id.btnNext).setOnClickListener(view -> {
-            if (currentPlayIndex == learningData.getSoraDetails().getAyahs().size() - 1) {
-                currentPlayIndex = 0;
-                currentRepeatAyaIndex = 1;
-                JcAudio audioToPlay = getNextAudio(0);
-                if (audioToPlay != null) {
-                    player.playAudio(audioToPlay);
-                }
-                ayasRecyclerView.smoothScrollToPosition(0);
 
+        player.findViewById(R.id.btnNext).setOnClickListener(view -> {
+            List<Ayah> ayahs = learningData.getSoraDetails().getAyahs();
+            if (ayahs == null || ayahs.isEmpty()) return;
+
+            if (currentPlayIndex >= ayahs.size() - 1) {
+                currentPlayIndex = 0;
             } else {
                 currentPlayIndex += 1;
-                currentRepeatAyaIndex = 1;
-                JcAudio audioToPlay = getNextAudio(currentPlayIndex);
-                if (audioToPlay != null) {
-                    player.playAudio(audioToPlay);
-                }
-                ayasRecyclerView.smoothScrollToPosition(currentPlayIndex);
             }
+            currentRepeatAyaIndex = 1;
 
-            ayasAdapter.setSelectedAyaIndex(currentPlayIndex);
+            JcAudio audioToPlay = getNextAudio(currentPlayIndex);
+            if (audioToPlay != null) {
+                player.playAudio(audioToPlay);
+            }
+            ayasRecyclerView.smoothScrollToPosition(currentPlayIndex);
+            if (ayasAdapter != null) {
+                ayasAdapter.setSelectedAyaIndex(currentPlayIndex);
+            }
         });
 
         player.findViewById(R.id.btnPrev).setOnClickListener(view -> {
+            List<Ayah> ayahs = learningData.getSoraDetails().getAyahs();
+            if (ayahs == null || ayahs.isEmpty()) return;
 
             if (currentPlayIndex == 0) {
                 currentRepeatAyaIndex = 1;
-                JcAudio audioToPlay = getNextAudio(0);
-                if (audioToPlay != null) {
-                    player.playAudio(audioToPlay);
-                }
-                ayasRecyclerView.smoothScrollToPosition(0);
             } else {
                 currentPlayIndex -= 1;
                 currentRepeatAyaIndex = 1;
-                JcAudio audioToPlay = getNextAudio(currentPlayIndex);
-                if (audioToPlay != null) {
-                    player.playAudio(audioToPlay);
-                }
-                ayasRecyclerView.smoothScrollToPosition(currentPlayIndex);
             }
-            ayasAdapter.setSelectedAyaIndex(currentPlayIndex);
 
+            JcAudio audioToPlay = getNextAudio(currentPlayIndex);
+            if (audioToPlay != null) {
+                player.playAudio(audioToPlay);
+            }
+            ayasRecyclerView.smoothScrollToPosition(currentPlayIndex);
+            if (ayasAdapter != null) {
+                ayasAdapter.setSelectedAyaIndex(currentPlayIndex);
+            }
         });
     }
 
     private JcAudio getNextAudio(int index) {
-        List<Ayah> ayahs = learningData.getSoraDetails().getAyahs();
-        Log.d("walid fekry", "ayahs: " + ayahs.size());
+        if (learningData == null || learningData.getSoraDetails() == null) return null;
 
+        List<Ayah> ayahs = learningData.getSoraDetails().getAyahs();
         if (ayahs == null || ayahs.isEmpty()) {
-            showMessage("خطأ: قائمة الآيات فارغة أو لا تحتوي على أي شيء.");
+            showMessage("خطأ: قائمة الآيات فارغة");
             return null;
         }
 
         if (index < 0 || index >= ayahs.size()) {
-            showMessage("خطأ: يجب ان يكون رقم الآية بين 0 و " + ayahs.size());
+            showMessage("خطأ: رقم الآية غير صالح");
             return null;
         }
 
         Ayah ayah = ayahs.get(index);
         String audioUrl = ayah.getAudio();
 
-        File localFile = new File(getApplicationContext().getExternalFilesDir(null), "QuranAudio/" + learningData.getSelectedReciter().getIdentifier() + "/" + learningData.getSoraDetails().getEnglishName() + "_ayah_" + ayah.getNumberInSurah() + ".mp3");
+        String reciterId = (learningData.getSelectedReciter() != null && learningData.getSelectedReciter().getIdentifier() != null)
+                ? learningData.getSelectedReciter().getIdentifier() : "";
+        String englishName = (learningData.getSoraDetails().getEnglishName() != null)
+                ? learningData.getSoraDetails().getEnglishName() : "surah";
+
+        File localFile = new File(getApplicationContext().getExternalFilesDir(null),
+                "QuranAudio/" + reciterId + "/" + englishName + "_ayah_" + ayah.getNumberInSurah() + ".mp3");
+
+        String title = (ayah.getText() != null) ? ayah.getText() : "آية " + (index + 1);
+
         if (localFile.exists()) {
-            Log.d("walid fekry", "local audio: " + localFile);
-
-            return JcAudio.createFromFilePath(ayah.getText(), localFile.getAbsolutePath());
-        } else {
-            Log.d("walid fekry", "online audio: " + localFile);
-
-            return JcAudio.createFromURL(ayah.getText(), audioUrl);
+            return JcAudio.createFromFilePath(title, localFile.getAbsolutePath());
+        } else if (audioUrl != null && !audioUrl.isEmpty()) {
+            return JcAudio.createFromURL(title, audioUrl);
         }
+        return null;
     }
-
 
     @Override
     public void onAyaClicked(Ayah ayah, int position) {
@@ -196,9 +250,13 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
 
     @Override
     public void onCompletedAudio() {
+        if (audioCompletedRunnable != null) {
+            handler.removeCallbacks(audioCompletedRunnable);
+        }
 
-        final Handler handler = new Handler(Looper.getMainLooper());
-        handler.postDelayed(() -> runOnUiThread(() -> {
+        audioCompletedRunnable = () -> {
+            if (isFinishing() || isDestroyed()) return;
+
             if (currentRepeatAyaIndex < learningData.getRepeatAya()) {
                 currentRepeatAyaIndex += 1;
             } else {
@@ -206,20 +264,24 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
                 currentRepeatAyaIndex = 1;
             }
 
-            if (currentPlayIndex < learningData.getSoraDetails().getAyahs().size()) {
+            List<Ayah> ayahs = learningData.getSoraDetails().getAyahs();
+            if (ayahs != null && currentPlayIndex < ayahs.size()) {
                 JcAudio audioToPlay = getNextAudio(currentPlayIndex);
                 if (audioToPlay != null) {
                     player.playAudio(audioToPlay);
                 }
                 ayasRecyclerView.smoothScrollToPosition(currentPlayIndex);
-                ayasAdapter.setSelectedAyaIndex(currentPlayIndex);
+                if (ayasAdapter != null) {
+                    ayasAdapter.setSelectedAyaIndex(currentPlayIndex);
+                }
             } else {
                 currentPlayIndex = 0;
-                ayasAdapter.setSelectedAyaIndex(0);
+                if (ayasAdapter != null) {
+                    ayasAdapter.setSelectedAyaIndex(0);
+                }
 
                 if (currentRepeatSoraIndex < learningData.getRepeatSora()) {
                     currentRepeatSoraIndex += 1;
-                    ayasAdapter.setSelectedAyaIndex(currentPlayIndex);
                     JcAudio audioToPlay = getNextAudio(currentPlayIndex);
                     if (audioToPlay != null) {
                         player.playAudio(audioToPlay);
@@ -228,62 +290,53 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
                 } else {
                     finish();
                 }
-
             }
+        };
 
-        }), 200);
+        handler.postDelayed(audioCompletedRunnable, 200);
     }
 
     private void showMessage(String message) {
-        if (message != null) {
+        if (!isFinishing() && !isDestroyed() && message != null) {
             Toast.makeText(this, message, Toast.LENGTH_LONG).show();
         }
     }
 
     @Override
-    public void onContinueAudio(@NonNull JcStatus jcStatus) {
-
-    }
+    public void onContinueAudio(@NonNull JcStatus jcStatus) {}
 
     @Override
     public void onJcpError(@NonNull Throwable throwable) {
-
+        Log.e(TAG, "JcPlayer error: " + throwable.getMessage());
     }
 
     @Override
-    public void onPaused(@NonNull JcStatus jcStatus) {
-
-    }
+    public void onPaused(@NonNull JcStatus jcStatus) {}
 
     @Override
-    public void onPlaying(@NonNull JcStatus jcStatus) {
-
-    }
+    public void onPlaying(@NonNull JcStatus jcStatus) {}
 
     @Override
-    public void onPreparedAudio(@NonNull JcStatus jcStatus) {
-
-    }
+    public void onPreparedAudio(@NonNull JcStatus jcStatus) {}
 
     @Override
-    public void onStopped(@NonNull JcStatus jcStatus) {
-
-    }
+    public void onStopped(@NonNull JcStatus jcStatus) {}
 
     @Override
-    public void onTimeChanged(@NonNull JcStatus jcStatus) {
-
-    }
+    public void onTimeChanged(@NonNull JcStatus jcStatus) {}
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        player.kill();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-//        player.createNotification();
+        if (audioCompletedRunnable != null) {
+            handler.removeCallbacks(audioCompletedRunnable);
+        }
+        if (player != null) {
+            try {
+                player.kill();
+            } catch (Exception e) {
+                Log.e(TAG, "Error killing player", e);
+            }
+        }
     }
 }

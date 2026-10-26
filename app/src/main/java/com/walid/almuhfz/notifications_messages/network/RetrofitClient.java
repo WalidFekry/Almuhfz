@@ -1,18 +1,20 @@
 package com.walid.almuhfz.notifications_messages.network;
 
+import com.walid.almuhfz.network.NetworkClient;
+
 import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClient {
     private static final String BASE_URL = "https://post.walid-fekry.com/";
-    private static Retrofit retrofit = null;
+    private static volatile Retrofit retrofit = null;
 
     public static Retrofit getClient() {
         if (retrofit == null) {
-            retrofit = new Retrofit.Builder()
-                    .baseUrl(BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
+            synchronized (RetrofitClient.class) {
+                if (retrofit == null) {
+                    retrofit = NetworkClient.getInstance().createRetrofit(BASE_URL);
+                }
+            }
         }
         return retrofit;
     }

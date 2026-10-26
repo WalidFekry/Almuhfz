@@ -1,50 +1,31 @@
 package com.walid.almuhfz.learning.networking;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.walid.almuhfz.network.NetworkClient;
 
-import java.util.concurrent.TimeUnit;
-
-import okhttp3.Dispatcher;
-import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClient {
     public static final String BASE_URL = "https://api.alquran.cloud/";
-    public static Dispatcher dispatcher = new Dispatcher();
-    private static RetrofitClient mInstance;
-    private final Retrofit retrofit;
+    private static volatile RetrofitClient mInstance;
+    private final Api api;
 
     private RetrofitClient() {
-        Gson gson = new GsonBuilder()
-                .setLenient()
-                .create();
-
-        OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder();
-        httpClientBuilder.connectTimeout(1, TimeUnit.MINUTES)
-                .readTimeout(2, TimeUnit.MINUTES)
-                .writeTimeout(2, TimeUnit.MINUTES);
-        httpClientBuilder.dispatcher(dispatcher);
-        httpClientBuilder.addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY));
-
-        retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .client(httpClientBuilder.build())
-                .build();
+        Retrofit retrofit = NetworkClient.getInstance().createRetrofit(BASE_URL);
+        api = retrofit.create(Api.class);
     }
-    public static synchronized RetrofitClient getInstance() {
 
+    public static RetrofitClient getInstance() {
         if (mInstance == null) {
-            mInstance = new RetrofitClient();
+            synchronized (RetrofitClient.class) {
+                if (mInstance == null) {
+                    mInstance = new RetrofitClient();
+                }
+            }
         }
         return mInstance;
     }
 
     public Api getApi() {
-        return retrofit.create(Api.class);
+        return api;
     }
-
 }
