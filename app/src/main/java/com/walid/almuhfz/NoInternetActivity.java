@@ -7,7 +7,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 
-import com.walid.almuhfz.notifications_messages.NotificationsMessagesActivity;
+import com.walid.almuhfz.utils.ThemeManager;
 
 public class NoInternetActivity extends AppCompatActivity {
 
@@ -15,6 +15,7 @@ public class NoInternetActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeManager.applySavedTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         initializeViews();

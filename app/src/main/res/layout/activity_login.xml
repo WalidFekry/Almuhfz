@@ -4,8 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
+    android:background="@color/app_background"
     android:gravity="center"
+    android:orientation="vertical"
     tools:context=".NoInternetActivity">
 
     <!-- AppBar -->
@@ -13,26 +14,27 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/around_line3"
-        android:layoutDirection="rtl"
-        android:theme="@style/AppTheme.AppBarOverlay">
+        android:fitsSystemWindows="true">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@drawable/around_line3"
-            app:titleTextAppearance="@style/TitleToolBarApppearance"
-            app:popupTheme="@style/TextAppearance.AppCompat">
+            app:popupTheme="@style/TextAppearance.AppCompat"
+            app:titleTextAppearance="@style/TitleToolBarApppearance">
 
             <TextView
                 android:id="@+id/toolbar_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/app_name"
-                android:textSize="22sp"
+                android:layout_gravity="end"
+                android:layout_marginEnd="16dp"
                 android:fontFamily="@font/jazeera"
                 android:gravity="end"
-                android:layout_marginEnd="16dp"/>
+                android:text="@string/app_name"
+                android:textColor="@color/text_on_primary"
+                android:textSize="22sp" />
         </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -40,14 +42,14 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#fff">
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
             android:orientation="vertical"
-            android:padding="16dp"
-            android:gravity="center_horizontal">
+            android:padding="16dp">
 
             <!-- Lottie Animation -->
             <com.airbnb.lottie.LottieAnimationView
@@ -64,31 +66,33 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                app:cardBackgroundColor="#fff"
-                app:cardCornerRadius="8dp">
+                app:cardBackgroundColor="@color/surface_card"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="3dp">
 
                 <TextView
+                    style="@style/TextAppearance.AllTextView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="25dp"
-                    android:text="@string/login"
-                    android:textSize="20sp"
-                    android:textColor="#000"
                     android:fontFamily="@font/jazeera"
-                    style="@style/TextAppearance.AllTextView" />
+                    android:padding="24dp"
+                    android:text="@string/login"
+                    android:textColor="@color/text_primary_color"
+                    android:textSize="18sp" />
             </androidx.cardview.widget.CardView>
 
             <!-- Retry Button -->
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/loginn"
                 android:layout_width="250dp"
-                android:layout_height="65dp"
-                android:layout_marginTop="20dp"
-                android:text="@string/try_again"
-                android:textSize="20sp"
-                android:textColor="#fff"
+                android:layout_height="60dp"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/value_background"
+                android:backgroundTint="@color/button_green"
                 android:fontFamily="@font/jazeera"
-                android:background="@drawable/around_line3" />
+                android:text="@string/try_again"
+                android:textColor="@color/text_on_primary"
+                android:textSize="18sp" />
 
         </LinearLayout>
     </ScrollView>

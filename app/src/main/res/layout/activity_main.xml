@@ -1,74 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_gravity="center"
-    android:background="@drawable/around_line3"
-    android:gravity="center"
-    android:layoutDirection="rtl"
-    android:orientation="vertical">
+    android:background="@color/app_background"
+    android:fillViewport="true"
+    android:layoutDirection="rtl">
 
     <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="16dp">
 
-
-        <androidx.core.widget.NestedScrollView
+        <!-- Reciter Card -->
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_marginTop="16dp"
-            android:gravity="center"
-            android:layoutDirection="rtl"
-            android:orientation="vertical">
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="@color/surface_card"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp">
 
-            <androidx.appcompat.widget.LinearLayoutCompat
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:layoutDirection="rtl"
+                android:layout_height="wrap_content"
                 android:orientation="vertical"
-                tools:context=".QouranLearningActivity">
+                android:padding="16dp">
 
-
-                <androidx.appcompat.widget.AppCompatTextView
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="40dp"
-                    android:text="القارئ"
-                    android:textColor="@color/white"
-                    android:textSize="20sp"
+                    android:fontFamily="@font/jazeera"
+                    android:text="اختر القارئ"
+                    android:textColor="@color/text_secondary_color"
+                    android:textSize="14sp"
                     android:textStyle="bold" />
 
                 <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/reciter_text_view"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="16dp"
+                    android:layout_marginTop="8dp"
                     android:background="@drawable/value_background"
+                    android:fontFamily="@font/jazeera"
                     android:gravity="center"
-                    android:padding="16dp"
+                    android:padding="14dp"
                     android:text="احمد العجمي"
-                    android:textColor="@color/black"
-                    android:textSize="18sp"
+                    android:textColor="@color/text_primary_color"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
-                <androidx.appcompat.widget.AppCompatTextView
+        <!-- Surah Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="@color/surface_card"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="السورة"
-                    android:textColor="@color/white"
-                    android:textSize="20sp"
+                    android:fontFamily="@font/jazeera"
+                    android:text="اختر السورة"
+                    android:textColor="@color/text_secondary_color"
+                    android:textSize="14sp"
                     android:textStyle="bold" />
 
-                <androidx.appcompat.widget.LinearLayoutCompat
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="16dp">
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
                     <androidx.appcompat.widget.AppCompatTextView
                         android:id="@+id/sora_text_view"
@@ -76,192 +91,235 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:background="@drawable/value_background"
+                        android:fontFamily="@font/jazeera"
                         android:gravity="center"
-                        android:padding="16dp"
+                        android:padding="14dp"
                         android:text="الفاتحة"
-                        android:textColor="@color/black"
-                        android:textSize="18sp"
-                        android:layout_marginEnd="10dp"
+                        android:textColor="@color/text_primary_color"
+                        android:textSize="16sp"
                         android:textStyle="bold" />
 
                     <androidx.appcompat.widget.AppCompatImageButton
                         android:id="@+id/download_button"
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:layout_marginStart="10dp"
+                        android:background="@drawable/value_background"
                         android:contentDescription="تحميل السورة"
-                        android:padding="8dp"
+                        android:padding="12dp"
                         android:src="@drawable/download"
-                        android:tint="@color/black" />
-                </androidx.appcompat.widget.LinearLayoutCompat>
+                        app:tint="@color/primary_color" />
+                </LinearLayout>
 
                 <ProgressBar
                     android:id="@+id/downloadProgressBar"
+                    style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_marginTop="10dp"
                     android:max="100"
                     android:progress="0"
-                    android:visibility="gone"
-                    />
+                    android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/downloadStatusText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:fontFamily="@font/jazeera"
                     android:text="جاري التحميل..."
-                    android:visibility="gone"
-                    android:layout_marginTop="8dp"/>
+                    android:textColor="@color/text_secondary_color"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
+        <!-- Ayah Range Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="@color/surface_card"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp">
 
-                <androidx.appcompat.widget.LinearLayoutCompat
-                    android:layout_width="match_parent"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="12dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
 
-                    <androidx.appcompat.widget.LinearLayoutCompat
-                        android:layout_width="0dp"
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical">
+                        android:fontFamily="@font/jazeera"
+                        android:text="من الآية"
+                        android:textColor="@color/text_secondary_color"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
 
-                        <androidx.appcompat.widget.AppCompatTextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="من الايه"
-                            android:textColor="@color/white"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
-
-                        <androidx.appcompat.widget.AppCompatTextView
-                            android:id="@+id/fromAyaTextView"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_margin="16dp"
-                            android:background="@drawable/value_background"
-                            android:gravity="center"
-                            android:padding="16dp"
-                            android:text="1"
-                            android:textColor="@color/black"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-                    </androidx.appcompat.widget.LinearLayoutCompat>
-
-                    <androidx.appcompat.widget.LinearLayoutCompat
-                        android:layout_width="0dp"
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/fromAyaTextView"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/value_background"
+                        android:fontFamily="@font/jazeera"
                         android:gravity="center"
-                        android:orientation="vertical">
+                        android:padding="12dp"
+                        android:text="1"
+                        android:textColor="@color/text_primary_color"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
 
-                        <androidx.appcompat.widget.AppCompatTextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="الى الايه"
-                            android:textColor="@color/white"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
 
-                        <androidx.appcompat.widget.AppCompatTextView
-                            android:id="@+id/toAyaTextView"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_margin="16dp"
-                            android:background="@drawable/value_background"
-                            android:gravity="center"
-                            android:padding="16dp"
-                            android:text="1"
-                            android:textColor="@color/black"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-                    </androidx.appcompat.widget.LinearLayoutCompat>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/jazeera"
+                        android:text="إلى الآية"
+                        android:textColor="@color/text_secondary_color"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
 
-                </androidx.appcompat.widget.LinearLayoutCompat>
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/toAyaTextView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/value_background"
+                        android:fontFamily="@font/jazeera"
+                        android:gravity="center"
+                        android:padding="12dp"
+                        android:text="1"
+                        android:textColor="@color/text_primary_color"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
+        <!-- Repeat Settings Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="@color/surface_card"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp">
 
-                <androidx.appcompat.widget.AppCompatTextView
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="التكرار لكل ايه"
-                    android:textColor="@color/white"
-                    android:textSize="20sp"
+                    android:fontFamily="@font/jazeera"
+                    android:text="التكرار لكل آية"
+                    android:textColor="@color/text_secondary_color"
+                    android:textSize="14sp"
                     android:textStyle="bold" />
 
                 <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/repeatAyaTextView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="16dp"
+                    android:layout_marginTop="6dp"
                     android:background="@drawable/value_background"
+                    android:fontFamily="@font/jazeera"
                     android:gravity="center"
-                    android:padding="16dp"
+                    android:padding="12dp"
                     android:text="بدون تكرار"
-                    android:textColor="@color/black"
-                    android:textSize="18sp"
+                    android:textColor="@color/text_primary_color"
+                    android:textSize="15sp"
                     android:textStyle="bold" />
 
-                <androidx.appcompat.widget.AppCompatTextView
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:fontFamily="@font/jazeera"
                     android:text="تكرار السورة"
-                    android:textColor="@color/white"
-                    android:textSize="20sp"
+                    android:textColor="@color/text_secondary_color"
+                    android:textSize="14sp"
                     android:textStyle="bold" />
 
                 <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/repeatSoraTextView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="16dp"
+                    android:layout_marginTop="6dp"
                     android:background="@drawable/value_background"
+                    android:fontFamily="@font/jazeera"
                     android:gravity="center"
-                    android:padding="16dp"
+                    android:padding="12dp"
                     android:text="بدون تكرار"
-                    android:textColor="@color/black"
-                    android:textSize="18sp"
+                    android:textColor="@color/text_primary_color"
+                    android:textSize="15sp"
                     android:textStyle="bold" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
-                <androidx.appcompat.widget.AppCompatTextView
-                    android:id="@+id/startLearn"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="16dp"
-                    android:background="@drawable/value_background"
-                    android:backgroundTint="@color/red"
-                    android:gravity="center"
-                    android:padding="16dp"
-                    android:text="ابدأ التعلم"
-                    android:textColor="@color/white"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:visibility="gone" />
+        <!-- Start Learn Action Buttons -->
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/startLearn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/value_background"
+            android:backgroundTint="@color/button_green"
+            android:elevation="4dp"
+            android:fontFamily="@font/jazeera"
+            android:gravity="center"
+            android:padding="16dp"
+            android:text="ابدأ التعلم"
+            android:textColor="@color/text_on_primary"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            tools:visibility="visible" />
 
-                <androidx.appcompat.widget.AppCompatTextView
-                    android:id="@+id/startLearnDone"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="16dp"
-                    android:background="@drawable/value_background"
-                    android:backgroundTint="@color/background_dark"
-                    android:gravity="center"
-                    android:padding="16dp"
-                    android:text="جاري التحميل .."
-                    android:textColor="@color/white"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:visibility="visible" />
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/startLearnDone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/value_background"
+            android:backgroundTint="@color/primary_dark"
+            android:fontFamily="@font/jazeera"
+            android:gravity="center"
+            android:padding="16dp"
+            android:text="جاري التحميل .."
+            android:textColor="@color/text_on_primary"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:visibility="visible" />
 
-                <ImageView
-                    android:id="@+id/rating"
-                    android:layout_width="match_parent"
-                    android:layout_height="100dp"
-                    android:src="@drawable/rating" />
-
-
-            </androidx.appcompat.widget.LinearLayoutCompat>
-
-        </androidx.core.widget.NestedScrollView>
+        <ImageView
+            android:id="@+id/rating"
+            android:layout_width="match_parent"
+            android:layout_height="90dp"
+            android:contentDescription="تقييم التطبيق"
+            android:src="@drawable/rating" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 </androidx.core.widget.NestedScrollView>

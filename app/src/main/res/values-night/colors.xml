@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand Primary Colors (Dark Mode - Vibrant Emerald Accent) -->
+    <color name="primary_color">#4CAF50</color>
+    <color name="primary_dark">#0E1610</color>
+    <color name="primary_light">#2D6A4F</color>
+    <color name="accent_gold">#FFD54F</color>
+
+    <!-- Backgrounds & Surfaces -->
+    <color name="app_background">#101712</color>
+    <color name="surface_card">#1A241C</color>
+    <color name="surface_card_secondary">#233026</color>
+    <color name="card_stroke_color">#2D3E30</color>
+
+    <!-- Typography Text Colors -->
+    <color name="text_primary_color">#E8F0EB</color>
+    <color name="text_secondary_color">#9CB3A1</color>
+    <color name="text_on_primary">#FFFFFF</color>
+
+    <!-- Buttons & Highlights -->
+    <color name="button_green">#388E3C</color>
+    <color name="button_green_pressed">#2E7D32</color>
+    <color name="selected_item_bg">#283D2C</color>
+    <color name="selected_aya_highlight">#314736</color>
+    <color name="selected_aya_text_color">#81C784</color>
+
+    <!-- Legacy Color Backwards Compatibility in Dark Mode -->
+    <color name="black">#FFFFFF</color>
+    <color name="white">#1A241C</color>
+    <color name="red">#EF5350</color>
+    <color name="dark_gray">#B0BEC5</color>
+    <color name="gray">#78909C</color>
+    <color name="unselect_indicater">#546E7A</color>
+    <color name="background_dark">#0E1610</color>
+    <color name="background_light">#1A241C</color>
+</resources>

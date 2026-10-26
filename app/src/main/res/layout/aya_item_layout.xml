@@ -1,10 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.appcompat.widget.AppCompatTextView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:padding="8dp"
-    android:id="@+id/aya_text_view"
-    android:text="بسم الله"
-    android:gravity="center"
-    android:fontFamily="@font/uthmanii"
-    android:textSize="22sp"
-    android:layout_height="wrap_content"/>
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="12dp"
+    android:layout_marginVertical="4dp"
+    app:cardBackgroundColor="@color/surface_card"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="1dp">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/aya_text_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/uthmanii"
+        android:gravity="center"
+        android:lineSpacingExtra="8dp"
+        android:padding="16dp"
+        android:text="بسم الله"
+        android:textColor="@color/text_primary_color"
+        android:textSize="22sp" />
+</androidx.cardview.widget.CardView>

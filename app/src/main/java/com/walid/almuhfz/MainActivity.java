@@ -57,6 +57,7 @@ import com.walid.almuhfz.learning.networking.QuranUtils;
 import com.walid.almuhfz.learning.networking.RetrofitClient;
 import com.walid.almuhfz.notifications_messages.NotificationsMessagesActivity;
 import com.walid.almuhfz.utils.AppExecutors;
+import com.walid.almuhfz.utils.ThemeManager;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -128,6 +129,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeManager.applySavedTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.mainbar);
 
@@ -850,10 +852,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         alert.show();
     }
 
+    private void showThemeSelectionDialog() {
+        CharSequence[] options = new CharSequence[]{"فاتح (Light)", "داكن (Dark)", "تلقائي حسب النظام (System)"};
+        int currentMode = ThemeManager.getSavedThemeMode(this);
+        int selectedIndex = (currentMode == ThemeManager.THEME_LIGHT) ? 0 :
+                (currentMode == ThemeManager.THEME_DARK) ? 1 : 2;
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("اختر مظهر التطبيق");
+        builder.setSingleChoiceItems(options, selectedIndex, (dialog, which) -> {
+            int newMode = (which == 0) ? ThemeManager.THEME_LIGHT :
+                    (which == 1) ? ThemeManager.THEME_DARK : ThemeManager.THEME_SYSTEM;
+            ThemeManager.saveAndApplyTheme(MainActivity.this, newMode);
+            dialog.dismiss();
+        });
+        builder.setNegativeButton("إلغاء", null);
+        builder.show();
+    }
+
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.maktbtiplus) {
+        if (id == R.id.theme_switch) {
+            showThemeSelectionDialog();
+        } else if (id == R.id.maktbtiplus) {
             Intent o = new Intent(Intent.ACTION_VIEW);
             o.setData(Uri.parse("https://walid-fekry.com/maktbti-plus/"));
             startActivity(o);

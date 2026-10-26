@@ -1,6 +1,7 @@
 package com.walid.almuhfz.learning;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,12 +49,21 @@ public class AyasAdapter extends RecyclerView.Adapter<AyasAdapter.Holder> {
         String ayahText = (currentAyah != null && currentAyah.getText() != null) ? currentAyah.getText() : "";
         holder.ayaTextView.setText(nf.format(position + 1) + " - " + ayahText);
 
-        int textColor = (selectedAyaIndex != RecyclerView.NO_POSITION && selectedAyaIndex == adapterPosition) ?
-                ContextCompat.getColor(holder.ayaTextView.getContext(), R.color.black) :
-                ContextCompat.getColor(holder.ayaTextView.getContext(), R.color.white);
-        holder.ayaTextView.setTextColor(textColor);
+        Context context = holder.ayaTextView.getContext();
+        boolean isSelected = (selectedAyaIndex != RecyclerView.NO_POSITION && selectedAyaIndex == adapterPosition);
 
-        holder.ayaTextView.setOnClickListener(view -> {
+        int textColor = isSelected ?
+                ContextCompat.getColor(context, R.color.selected_aya_text_color) :
+                ContextCompat.getColor(context, R.color.text_primary_color);
+
+        int bgColor = isSelected ?
+                ContextCompat.getColor(context, R.color.selected_aya_highlight) :
+                ContextCompat.getColor(context, R.color.transparent);
+
+        holder.ayaTextView.setTextColor(textColor);
+        holder.itemView.setBackgroundColor(bgColor);
+
+        holder.itemView.setOnClickListener(view -> {
             int newPosition = holder.getBindingAdapterPosition();
 
             if (newPosition == RecyclerView.NO_POSITION || ayahList == null || newPosition >= ayahList.size()) {

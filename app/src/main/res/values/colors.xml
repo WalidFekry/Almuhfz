@@ -1,5 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Brand Primary Colors (Light Mode - Deep Serene Green) -->
+    <color name="primary_color">#1A4D2E</color>
+    <color name="primary_dark">#123720</color>
+    <color name="primary_light">#2D6A4F</color>
+    <color name="accent_gold">#D4AF37</color>
+
+    <!-- Backgrounds & Surfaces -->
+    <color name="app_background">#F4F7F4</color>
+    <color name="surface_card">#FFFFFF</color>
+    <color name="surface_card_secondary">#E9F0EA</color>
+    <color name="card_stroke_color">#D0DDD2</color>
+
+    <!-- Typography Text Colors -->
+    <color name="text_primary_color">#1C2A1E</color>
+    <color name="text_secondary_color">#526B58</color>
+    <color name="text_on_primary">#FFFFFF</color>
+
+    <!-- Buttons & Highlights -->
+    <color name="button_green">#2E7D32</color>
+    <color name="button_green_pressed">#1B5E20</color>
+    <color name="selected_item_bg">#E2ECE4</color>
+    <color name="selected_aya_highlight">#FFF9C4</color>
+    <color name="selected_aya_text_color">#1A4D2E</color>
+
+    <!-- Legacy Color Backwards Compatibility -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
@@ -7,11 +32,11 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFF</color>
-    <color name="red">#FF0000</color>
+    <color name="red">#E53935</color>
     <color name="dark_gray">#FF616161</color>
     <color name="gray">#FF9E9E9E</color>
     <color name="unselect_indicater">#B3B3B3</color>
-    <color name="background_dark">#ff388e3c</color>
-    <color name="background_light">#ff81c784</color>
+    <color name="background_dark">#1A4D2E</color>
+    <color name="background_light">#488A5E</color>
     <color name="transparent">#00000000</color>
 </resources>
