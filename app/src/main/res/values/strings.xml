@@ -12,4 +12,13 @@
     <string name="message_time">تاريخ الرسالة</string>
     <string name="download_progress_format">%1$d / %2$d</string>
     <string name="theme_setting">مظهر التطبيق (فاتح / داكن)</string>
+    <string name="downloads_manager">إدارة التنزيلات الأوفلاين</string>
+    <string name="delete_all_downloads">حذف جميع التنزيلات</string>
+    <string name="no_downloads_yet">لا توجد تنزيلات حتّى الآن</string>
+    <string name="no_downloads_desc">يمكنك تنزيل سور القرآن الكريم من الشاشة الرئيسية للاستماع إليها بدون إنترنت في أي وقت.</string>
+    <string name="total_downloaded_space">مساحة التنزيلات المكتملة</string>
+    <string name="filter_all">الكل</string>
+    <string name="filter_completed">المكتملة</string>
+    <string name="filter_downloading">قيد التحميل</string>
+    <string name="filter_failed">المتوقفة / الفاشلة</string>
 </resources>

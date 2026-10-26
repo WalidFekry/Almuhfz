@@ -3,8 +3,6 @@ package com.walid.almuhfz.download;
 import android.content.Context;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
 import com.walid.almuhfz.db.QuranDatabase;
 import com.walid.almuhfz.db.entity.AyahEntity;
 import com.walid.almuhfz.db.entity.ReciterEntity;
@@ -21,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,6 +47,10 @@ public class DownloadManager {
         void onDownloadProgress(int surahNumber, String reciterId, int downloadedAyahs, int totalAyahs, int progressPercentage);
         void onDownloadCompleted(int surahNumber, String reciterId);
         void onDownloadFailed(int surahNumber, String reciterId, String errorMessage);
+    }
+
+    public interface ScanCallback {
+        void onScanCompleted(List<DownloadItem> items, long totalCompletedSizeBytes, int completedCount, int inProgressCount, int incompleteFailedCount);
     }
 
     private static volatile DownloadManager instance;
@@ -262,7 +265,7 @@ public class DownloadManager {
                 if (response.errorBody() != null) {
                     response.errorBody().close();
                 }
-                if (response.code() == 416) { // Range not satisfiable
+                if (response.code() == 416) {
                     if (partFile.exists()) partFile.delete();
                 }
             }
@@ -339,6 +342,227 @@ public class DownloadManager {
             QuranDatabase.getInstance(context.getApplicationContext()).quranDao().deleteUnusedReciters();
 
             notifyStateChanged(surahNumber, reciterId, State.IDLE);
+        });
+    }
+
+    public void deleteAllDownloadedSurahs(Context context, Runnable onComplete) {
+        if (context == null) return;
+
+        for (String jobKey : activeCancellationMap.keySet()) {
+            AtomicBoolean cancellationFlag = activeCancellationMap.get(jobKey);
+            if (cancellationFlag != null) cancellationFlag.set(true);
+        }
+        for (Call<ResponseBody> call : activeCallMap.values()) {
+            if (call != null) call.cancel();
+        }
+        activeCancellationMap.clear();
+        activeCallMap.clear();
+
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            File quranFolder = new File(context.getExternalFilesDir(null), "QuranAudio");
+            if (quranFolder.exists()) {
+                deleteFileOrDirectory(quranFolder);
+            }
+
+            try {
+                QuranDatabase.getInstance(context.getApplicationContext()).clearAllTables();
+            } catch (Exception e) {
+                Log.e(TAG, "Error clearing Room database", e);
+            }
+
+            AppExecutors.getInstance().mainThread().execute(() -> {
+                if (onComplete != null) onComplete.run();
+            });
+        });
+    }
+
+    private void deleteFileOrDirectory(File fileOrDirectory) {
+        if (fileOrDirectory.isDirectory()) {
+            File[] children = fileOrDirectory.listFiles();
+            if (children != null) {
+                for (File child : children) {
+                    deleteFileOrDirectory(child);
+                }
+            }
+        }
+        fileOrDirectory.delete();
+    }
+
+    public void scanAllDownloadItems(Context context, ScanCallback callback) {
+        if (context == null || callback == null) return;
+
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            List<DownloadItem> items = new ArrayList<>();
+            long totalCompletedSize = 0L;
+            int completedCount = 0;
+            int inProgressCount = 0;
+            int incompleteFailedCount = 0;
+
+            Context appContext = context.getApplicationContext();
+            List<ReciterEntity> reciterEntities = QuranDatabase.getInstance(appContext).quranDao().getDownloadedReciters();
+
+            Map<String, DownloadItem> itemMap = new HashMap<>();
+
+            for (ReciterEntity reciterEntity : reciterEntities) {
+                String reciterId = reciterEntity.getId();
+                List<SurahEntity> surahEntities = QuranDatabase.getInstance(appContext).quranDao().getDownloadedSurahsByReciter(reciterId);
+
+                for (SurahEntity surahEntity : surahEntities) {
+                    String engName = surahEntity.getEnglishName();
+                    int surahNum = surahEntity.getSurahNumber();
+                    String key = reciterId + "_" + surahNum;
+
+                    DownloadItem item = new DownloadItem(surahNum, surahEntity.getSurahName(), engName, reciterId, reciterEntity.getName());
+
+                    Reciter reciterModel = new Reciter();
+                    reciterModel.setIdentifier(reciterId);
+                    reciterModel.setName(reciterEntity.getName());
+                    item.setReciterModel(reciterModel);
+
+                    SoraDetails soraDetails = new SoraDetails();
+                    soraDetails.setNumber(surahNum);
+                    soraDetails.setName(surahEntity.getSurahName());
+                    soraDetails.setEnglishName(engName);
+
+                    List<AyahEntity> ayahEntities = QuranDatabase.getInstance(appContext).quranDao().getAyahsBySurahAndReciter(surahNum, reciterId);
+                    List<Ayah> ayahs = new ArrayList<>();
+                    int downloadedAyahs = 0;
+                    long surahSize = 0L;
+
+                    File folder = getSurahDirectory(appContext, reciterId);
+
+                    if (!ayahEntities.isEmpty()) {
+                        item.setTotalAyahs(ayahEntities.size());
+                        for (AyahEntity entity : ayahEntities) {
+                            Ayah ayah = new Ayah();
+                            ayah.setNumber(entity.getNumber());
+                            ayah.setNumberInSurah(entity.getNumberInSurah());
+                            ayah.setText(entity.getText());
+                            ayah.setAudio(entity.getAudio());
+                            ayahs.add(ayah);
+
+                            File audioFile = new File(folder, engName + "_ayah_" + entity.getNumberInSurah() + ".mp3");
+                            if (isAudioFileValid(audioFile)) {
+                                downloadedAyahs++;
+                                surahSize += audioFile.length();
+                            }
+                        }
+                    }
+                    soraDetails.setAyahs(ayahs);
+                    item.setSoraDetailsModel(soraDetails);
+
+                    item.setDownloadedAyahs(downloadedAyahs);
+                    item.setTotalSizeBytes(surahSize);
+
+                    if (isSurahDownloading(surahNum, reciterId)) {
+                        item.setState(State.DOWNLOADING);
+                        inProgressCount++;
+                    } else if (downloadedAyahs > 0 && downloadedAyahs == ayahEntities.size()) {
+                        item.setState(State.COMPLETED);
+                        item.setProgressPercentage(100);
+                        completedCount++;
+                        totalCompletedSize += surahSize;
+                    } else if (downloadedAyahs > 0) {
+                        item.setState(State.PAUSED);
+                        int progress = (item.getTotalAyahs() > 0) ? (int) ((downloadedAyahs / (float) item.getTotalAyahs()) * 100) : 0;
+                        item.setProgressPercentage(progress);
+                        incompleteFailedCount++;
+                    } else {
+                        item.setState(State.FAILED);
+                        incompleteFailedCount++;
+                    }
+
+                    itemMap.put(key, item);
+                }
+            }
+
+            File audioDir = new File(appContext.getExternalFilesDir(null), "QuranAudio");
+            if (audioDir.exists() && audioDir.isDirectory()) {
+                File[] reciterDirs = audioDir.listFiles();
+                if (reciterDirs != null) {
+                    for (File rDir : reciterDirs) {
+                        if (rDir.isDirectory()) {
+                            String reciterId = rDir.getName();
+                            File[] files = rDir.listFiles();
+                            if (files != null) {
+                                Map<String, List<File>> surahFilesMap = new HashMap<>();
+                                for (File file : files) {
+                                    String name = file.getName();
+                                    if (name.contains("_ayah_")) {
+                                        String prefix = name.substring(0, name.indexOf("_ayah_"));
+                                        List<File> list = surahFilesMap.get(prefix);
+                                        if (list == null) {
+                                            list = new ArrayList<>();
+                                            surahFilesMap.put(prefix, list);
+                                        }
+                                        list.add(file);
+                                    }
+                                }
+
+                                for (Map.Entry<String, List<File>> entry : surahFilesMap.entrySet()) {
+                                    String engName = entry.getKey();
+                                    List<File> fList = entry.getValue();
+
+                                    long sizeSum = 0L;
+                                    int validMp3Count = 0;
+                                    boolean hasPartFiles = false;
+
+                                    for (File f : fList) {
+                                        if (f.getName().endsWith(".part")) {
+                                            hasPartFiles = true;
+                                            sizeSum += f.length();
+                                        } else if (isAudioFileValid(f)) {
+                                            validMp3Count++;
+                                            sizeSum += f.length();
+                                        }
+                                    }
+
+                                    boolean alreadyTracked = false;
+                                    for (DownloadItem existingItem : itemMap.values()) {
+                                        if (existingItem.getReciterId().equals(reciterId) && existingItem.getEnglishName().equals(engName)) {
+                                            alreadyTracked = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (!alreadyTracked && !fList.isEmpty()) {
+                                        DownloadItem untrackedItem = new DownloadItem(0, engName, engName, reciterId, reciterId);
+                                        untrackedItem.setTotalSizeBytes(sizeSum);
+                                        untrackedItem.setDownloadedAyahs(validMp3Count);
+                                        untrackedItem.setTotalAyahs(Math.max(validMp3Count, fList.size()));
+
+                                        if (isSurahDownloading(0, reciterId)) {
+                                            untrackedItem.setState(State.DOWNLOADING);
+                                            inProgressCount++;
+                                        } else if (hasPartFiles) {
+                                            untrackedItem.setState(State.PAUSED);
+                                            incompleteFailedCount++;
+                                        } else if (validMp3Count > 0) {
+                                            untrackedItem.setState(State.COMPLETED);
+                                            completedCount++;
+                                            totalCompletedSize += sizeSum;
+                                        } else {
+                                            untrackedItem.setState(State.FAILED);
+                                            incompleteFailedCount++;
+                                        }
+                                        itemMap.put(reciterId + "_" + engName, untrackedItem);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            List<DownloadItem> resultList = new ArrayList<>(itemMap.values());
+            final long finalTotalCompletedSize = totalCompletedSize;
+            final int finalCompletedCount = completedCount;
+            final int finalInProgressCount = inProgressCount;
+            final int finalIncompleteFailedCount = incompleteFailedCount;
+
+            AppExecutors.getInstance().mainThread().execute(() -> {
+                callback.onScanCompleted(resultList, finalTotalCompletedSize, finalCompletedCount, finalInProgressCount, finalIncompleteFailedCount);
+            });
         });
     }
 

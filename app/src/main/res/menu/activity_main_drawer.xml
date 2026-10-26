@@ -5,10 +5,6 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/theme_switch"
-            android:icon="@drawable/ic_menu_manage"
-            android:title="@string/theme_setting" />
-        <item
             android:id="@+id/notification_messages"
             android:icon="@drawable/notification"
             android:title="اقتباسات عشوائية" />

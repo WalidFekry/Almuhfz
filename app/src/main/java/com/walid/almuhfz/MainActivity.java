@@ -45,6 +45,7 @@ import com.walid.almuhfz.db.entity.SurahEntity;
 import com.walid.almuhfz.db.mapper.AyahMapper;
 import com.walid.almuhfz.db.mapper.ReciterMapper;
 import com.walid.almuhfz.download.DownloadManager;
+import com.walid.almuhfz.download.DownloadsActivity;
 import com.walid.almuhfz.learning.LearningActivity;
 import com.walid.almuhfz.learning.models.Ayah;
 import com.walid.almuhfz.learning.models.LearningData;
@@ -323,6 +324,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void setListeners() {
+        View cardDownloads = findViewById(R.id.cardDownloadsManager);
+        if (cardDownloads != null) {
+            cardDownloads.setOnClickListener(v -> startActivity(new Intent(this, DownloadsActivity.class)));
+        }
+
+        View cardTheme = findViewById(R.id.cardThemeSwitcher);
+        if (cardTheme != null) {
+            cardTheme.setOnClickListener(v -> showThemeSelectionDialog());
+        }
+
         downloadButton.setOnClickListener(view -> handleDownloadButtonClick());
 
         reciterTextView.setOnClickListener(view -> selectReciter());
@@ -812,9 +823,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.theme_switch) {
-            showThemeSelectionDialog();
-        } else if (id == R.id.maktbtiplus) {
+        if (id == R.id.maktbtiplus) {
             Intent o = new Intent(Intent.ACTION_VIEW);
             o.setData(Uri.parse("https://walid-fekry.com/maktbti-plus/"));
             startActivity(o);

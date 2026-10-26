@@ -48,6 +48,9 @@
         <activity
             android:name=".learning.LearningActivity"
             android:exported="false" />
+        <activity
+            android:name=".download.DownloadsActivity"
+            android:exported="false" />
 
         <!-- Firebase Messaging Service -->
         <service
