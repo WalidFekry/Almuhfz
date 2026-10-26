@@ -15,7 +15,7 @@ public class RetrofitClient {
     public static final String BASE_URL = "https://api.alquran.cloud/";
     public static Dispatcher dispatcher = new Dispatcher();
     private static RetrofitClient mInstance;
-    private Retrofit retrofit;
+    private final Retrofit retrofit;
 
     private RetrofitClient() {
         Gson gson = new GsonBuilder()
