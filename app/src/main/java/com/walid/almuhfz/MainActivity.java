@@ -3,7 +3,6 @@ package com.walid.almuhfz;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -45,6 +44,7 @@ import com.walid.almuhfz.db.entity.ReciterEntity;
 import com.walid.almuhfz.db.entity.SurahEntity;
 import com.walid.almuhfz.db.mapper.AyahMapper;
 import com.walid.almuhfz.db.mapper.ReciterMapper;
+import com.walid.almuhfz.download.DownloadManager;
 import com.walid.almuhfz.learning.LearningActivity;
 import com.walid.almuhfz.learning.models.Ayah;
 import com.walid.almuhfz.learning.models.LearningData;
@@ -59,26 +59,19 @@ import com.walid.almuhfz.notifications_messages.NotificationsMessagesActivity;
 import com.walid.almuhfz.utils.AppExecutors;
 import com.walid.almuhfz.utils.ThemeManager;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import guy4444.smartrate.SmartRate;
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import softpro.naseemali.ShapedNavigationView;
 import softpro.naseemali.ShapedViewSettings;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, DownloadManager.DownloadListener {
     private static final String TAG = "MainActivity";
     private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1;
     private static final long ONE_DAY_MILLIS = 24 * 60 * 60 * 1000L;
@@ -138,6 +131,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setupToolbar();
         setupDrawer();
         setupNavigationView();
+
+        DownloadManager.getInstance().addListener(this);
 
         getListOfReciters();
         promptUserForRating();
@@ -235,155 +230,100 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         shapedNavigationView.setNavigationItemSelectedListener(this);
     }
 
-    public File createSurahFolder(Context context) {
-        if (selectedReciter == null || selectedReciter.getIdentifier() == null) {
-            return null;
-        }
-        File folder = new File(context.getExternalFilesDir(null), "QuranAudio/" + selectedReciter.getIdentifier());
-        if (!folder.exists()) {
-            folder.mkdirs();
-        }
-        return folder;
-    }
-
-    public void downloadAyahAudio(String url, File outputFile, Runnable onComplete) {
-        Call<ResponseBody> call = RetrofitClient.getInstance().getApi().downloadFileWithDynamicUrl(url);
-        call.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    AppExecutors.getInstance().diskIO().execute(() -> {
-                        boolean writtenToDisk = writeResponseBodyToDisk(response.body(), outputFile);
-                        if (writtenToDisk) {
-                            Log.d(TAG, "File downloaded: " + outputFile.getAbsolutePath());
-                            if (onComplete != null) {
-                                AppExecutors.getInstance().mainThread().execute(onComplete);
-                            }
-                        } else {
-                            Log.e(TAG, "Failed to write the file to disk");
-                        }
-                    });
-                } else {
-                    if (response.errorBody() != null) {
-                        response.errorBody().close();
-                    }
-                    Log.e(TAG, "Server error: " + response.code());
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
-                Log.e(TAG, "Download failed: " + t.getMessage());
-            }
-        });
-    }
-
-    private boolean writeResponseBodyToDisk(ResponseBody body, File outputFile) {
-        try (InputStream inputStream = body.byteStream();
-             OutputStream outputStream = new FileOutputStream(outputFile)) {
-
-            byte[] fileReader = new byte[4096];
-            int read;
-
-            while ((read = inputStream.read(fileReader)) != -1) {
-                outputStream.write(fileReader, 0, read);
-            }
-
-            outputStream.flush();
-            return true;
-        } catch (IOException e) {
-            Log.e(TAG, "IOException writing file: " + e.getMessage());
-            return false;
-        }
-    }
-
-    public void downloadSurahAudio(Context context, List<Ayah> ayahs) {
-        if (ayahs == null || ayahs.isEmpty() || soraDetails == null || selectedReciter == null) {
-            Toast.makeText(context, "لا توجد تفاصيل متاحة للتحميل", Toast.LENGTH_SHORT).show();
+    private void updateDownloadUiState() {
+        if (selectedReciter == null || soraDetails == null || soraDetails.getAyahs() == null) {
+            downloadProgressBar.setVisibility(View.GONE);
+            downloadStatusText.setVisibility(View.GONE);
             return;
         }
 
-        File folder = createSurahFolder(context);
-        if (folder == null) {
-            Toast.makeText(context, "تعذر إنشاء مجلد الحفظ", Toast.LENGTH_SHORT).show();
+        int surahNumber = soraDetails.getNumber();
+        String reciterId = selectedReciter.getIdentifier();
+        String engName = soraDetails.getEnglishName();
+        int ayahCount = soraDetails.getAyahs().size();
+
+        boolean isDownloading = DownloadManager.getInstance().isSurahDownloading(surahNumber, reciterId);
+        boolean isDownloaded = DownloadManager.getInstance().isSurahDownloaded(this, surahNumber, reciterId, engName, ayahCount);
+
+        if (isDownloading) {
+            downloadProgressBar.setVisibility(View.VISIBLE);
+            downloadStatusText.setVisibility(View.VISIBLE);
+            downloadButton.setAlpha(0.6f);
+        } else if (isDownloaded) {
+            downloadProgressBar.setVisibility(View.GONE);
+            downloadStatusText.setVisibility(View.VISIBLE);
+            downloadStatusText.setText("متاحة أوفلاين (جاهزة للتشغيل بدون إنترنت) ✔");
+            downloadButton.setAlpha(1.0f);
+        } else {
+            downloadProgressBar.setVisibility(View.GONE);
+            downloadStatusText.setVisibility(View.GONE);
+            downloadButton.setAlpha(1.0f);
+        }
+    }
+
+    private void handleDownloadButtonClick() {
+        if (selectedReciter == null || soraDetails == null || soraDetails.getAyahs() == null) {
+            Toast.makeText(this, "برجاء اختيار القارئ والسورة أولاً", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        int totalAyahs = ayahs.size();
-        AtomicInteger downloadedCount = new AtomicInteger(0);
+        int surahNumber = soraDetails.getNumber();
+        String reciterId = selectedReciter.getIdentifier();
+        String engName = soraDetails.getEnglishName();
+        int ayahCount = soraDetails.getAyahs().size();
 
-        downloadProgressBar.setVisibility(View.VISIBLE);
-        downloadStatusText.setVisibility(View.VISIBLE);
-        downloadProgressBar.setProgress(0);
-        downloadStatusText.setText(getString(R.string.download_progress_format, 0, totalAyahs));
+        boolean isDownloading = DownloadManager.getInstance().isSurahDownloading(surahNumber, reciterId);
+        boolean isDownloaded = DownloadManager.getInstance().isSurahDownloaded(this, surahNumber, reciterId, engName, ayahCount);
 
-        for (Ayah ayah : ayahs) {
-            String url = ayah.getAudio();
-            String fileName = (soraDetails.getEnglishName() != null ? soraDetails.getEnglishName() : "surah")
-                    + "_ayah_" + ayah.getNumberInSurah() + ".mp3";
-            File file = new File(folder, fileName);
+        if (isDownloading) {
+            DownloadManager.getInstance().pauseOrCancelDownload(surahNumber, reciterId);
+            Toast.makeText(this, "تم إيقاف التحميل مؤقتاً", Toast.LENGTH_SHORT).show();
+            updateDownloadUiState();
+        } else if (isDownloaded) {
+            showDownloadedSurahOptionsDialog(surahNumber, reciterId, engName);
+        } else {
+            DownloadManager.getInstance().startOrResumeSurahDownload(this, selectedReciter, soraDetails);
+            Toast.makeText(this, "جاري بدء تحميل السورة أوفلاين...", Toast.LENGTH_SHORT).show();
+            updateDownloadUiState();
+        }
+    }
 
-            Runnable updateProgressRunnable = () -> {
-                int current = downloadedCount.incrementAndGet();
-                int progress = (int) ((current / (float) totalAyahs) * 100);
+    private void showDownloadedSurahOptionsDialog(int surahNumber, String reciterId, String engName) {
+        CharSequence[] options = new CharSequence[]{"ابدأ التعلم الآن", "إعادة التحميل", "حذف الملفات المحفوظة", "إلغاء"};
 
-                if (!isFinishing() && !isDestroyed()) {
-                    downloadProgressBar.setProgress(progress);
-                    downloadStatusText.setText(getString(R.string.download_progress_format, current, totalAyahs));
-                    if (current == totalAyahs) {
-                        Toast.makeText(context, "تم تحميل السورة بالكامل", Toast.LENGTH_LONG).show();
-                        downloadProgressBar.setVisibility(View.GONE);
-                        downloadStatusText.setVisibility(View.GONE);
-                    }
-                }
-            };
-
-            if (!file.exists()) {
-                downloadAyahAudio(url, file, updateProgressRunnable);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("السورة محفوظة أوفلاين 🎉");
+        builder.setItems(options, (dialog, which) -> {
+            if (which == 0) {
+                startLearningActivity();
+            } else if (which == 1) {
+                DownloadManager.getInstance().startOrResumeSurahDownload(this, selectedReciter, soraDetails);
+                Toast.makeText(this, "جاري إعادة التحميل...", Toast.LENGTH_SHORT).show();
+                updateDownloadUiState();
+            } else if (which == 2) {
+                DownloadManager.getInstance().deleteDownloadedSurah(this, surahNumber, reciterId, engName);
+                Toast.makeText(this, "تم حذف الملفات المحفوظة للسورة", Toast.LENGTH_SHORT).show();
+                updateDownloadUiState();
             } else {
-                updateProgressRunnable.run();
-            }
-        }
-
-        AppExecutors.getInstance().diskIO().execute(() -> {
-            try {
-                ReciterEntity reciter = new ReciterEntity(selectedReciter.getIdentifier(), selectedReciter.getName());
-                QuranDatabase.getInstance(getApplicationContext()).quranDao().insertReciter(reciter);
-
-                SurahEntity surah = new SurahEntity(soraDetails.getNumber(), soraDetails.getName(), reciter.getId(), soraDetails.getEnglishName());
-                long surahId = QuranDatabase.getInstance(getApplicationContext()).quranDao().insertSurah(surah);
-
-                if (surahId == -1) {
-                    return;
-                }
-
-                List<AyahEntity> entities = new ArrayList<>();
-                for (Ayah ayah : soraDetails.getAyahs()) {
-                    AyahEntity entity = new AyahEntity(
-                            ayah.getNumber() != null ? ayah.getNumber() : 0,
-                            ayah.getNumberInSurah() != null ? ayah.getNumberInSurah() : 0,
-                            ayah.getText() != null ? ayah.getText() : "",
-                            ayah.getAudio() != null ? ayah.getAudio() : "",
-                            (int) surahId
-                    );
-                    entities.add(entity);
-                }
-
-                QuranDatabase.getInstance(getApplicationContext()).quranDao().insertAyahs(entities);
-            } catch (Exception e) {
-                Log.e(TAG, "Error saving downloaded surah to Room", e);
+                dialog.dismiss();
             }
         });
+        builder.show();
+    }
+
+    private void startLearningActivity() {
+        if (selectedReciter == null || soraDetails == null) {
+            Toast.makeText(this, "يرجى اختيار القارئ والسورة أولاً", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Intent intent = new Intent(this, LearningActivity.class);
+        LearningData data = new LearningData(selectedReciter, soraDetails, selectedSoraNumber, selectedFrom, selectedTo, repeatAya, repeatSora);
+        intent.putExtra("learning_data", data);
+        startActivity(intent);
     }
 
     private void setListeners() {
-        downloadButton.setOnClickListener(view -> {
-            if (soraDetails != null && soraDetails.getAyahs() != null) {
-                downloadSurahAudio(this, soraDetails.getAyahs());
-            } else {
-                Toast.makeText(this, "برجاء اختيار السورة أولاً", Toast.LENGTH_SHORT).show();
-            }
-        });
+        downloadButton.setOnClickListener(view -> handleDownloadButtonClick());
 
         reciterTextView.setOnClickListener(view -> selectReciter());
         soraTextView.setOnClickListener(view -> selectSora());
@@ -392,16 +332,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         repeatAyaTextView.setOnClickListener(view -> selectAyaRepeat());
         repeatSoraTextView.setOnClickListener(view -> selectSoraRepeat());
 
-        startLearn.setOnClickListener(view -> {
-            if (selectedReciter == null || soraDetails == null) {
-                Toast.makeText(this, "يرجى اختيار القارئ والسورة أولاً", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            Intent intent = new Intent(this, LearningActivity.class);
-            LearningData data = new LearningData(selectedReciter, soraDetails, selectedSoraNumber, selectedFrom, selectedTo, repeatAya, repeatSora);
-            intent.putExtra("learning_data", data);
-            startActivity(intent);
-        });
+        startLearn.setOnClickListener(view -> startLearningActivity());
 
         rateApp.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.walid.almuhfz"))));
     }
@@ -601,6 +532,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     hideLoading();
                     setViewsState(true, 1f);
                     toggleLearnButtons(false);
+
+                    updateDownloadUiState();
                 } else {
                     handleError("حدث خطأ أثناء تحميل البيانات. الرجاء المحاولة مرة أخرى.");
                 }
@@ -627,7 +560,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 localSoraList.add(new Sora(surahEntity.getSurahNumber(), surahEntity.getSurahName(), surahEntity.getEnglishName()));
             }
 
-            List<AyahEntity> roomData = QuranDatabase.getInstance(getApplicationContext()).quranDao().getAyahsBySurah(selectedSoraNumber);
+            List<AyahEntity> roomData = QuranDatabase.getInstance(getApplicationContext()).quranDao().getAyahsBySurahAndReciter(selectedSoraNumber, selectedReciter.getIdentifier());
+            if (roomData.isEmpty()) {
+                roomData = QuranDatabase.getInstance(getApplicationContext()).quranDao().getAyahsBySurah(selectedSoraNumber);
+            }
+
             List<Ayah> selectedAyasList = new ArrayList<>();
             for (AyahEntity entity : roomData) {
                 selectedAyasList.add(AyahMapper.fromEntity(entity));
@@ -658,6 +595,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     hideLoading();
                     setViewsState(true, 1f);
                     toggleLearnButtons(false);
+
+                    updateDownloadUiState();
                 }
             });
         });
@@ -914,8 +853,52 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
+    public void onDownloadStateChanged(int surahNumber, String reciterId, DownloadManager.State state) {
+        if (soraDetails != null && selectedReciter != null
+                && surahNumber == soraDetails.getNumber()
+                && reciterId.equals(selectedReciter.getIdentifier())) {
+            updateDownloadUiState();
+        }
+    }
+
+    @Override
+    public void onDownloadProgress(int surahNumber, String reciterId, int downloadedAyahs, int totalAyahs, int progressPercentage) {
+        if (soraDetails != null && selectedReciter != null
+                && surahNumber == soraDetails.getNumber()
+                && reciterId.equals(selectedReciter.getIdentifier())) {
+            downloadProgressBar.setVisibility(View.VISIBLE);
+            downloadStatusText.setVisibility(View.VISIBLE);
+            downloadProgressBar.setProgress(progressPercentage);
+            downloadStatusText.setText(getString(R.string.download_progress_format, downloadedAyahs, totalAyahs) + " (" + progressPercentage + "%)");
+        }
+    }
+
+    @Override
+    public void onDownloadCompleted(int surahNumber, String reciterId) {
+        if (soraDetails != null && selectedReciter != null
+                && surahNumber == soraDetails.getNumber()
+                && reciterId.equals(selectedReciter.getIdentifier())) {
+            updateDownloadUiState();
+            Toast.makeText(this, "تم تحميل السورة بالكامل وإضافتها للتحميلات أوفلاين 🎉", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    public void onDownloadFailed(int surahNumber, String reciterId, String errorMessage) {
+        if (soraDetails != null && selectedReciter != null
+                && surahNumber == soraDetails.getNumber()
+                && reciterId.equals(selectedReciter.getIdentifier())) {
+            updateDownloadUiState();
+            if (errorMessage != null && !errorMessage.isEmpty()) {
+                Toast.makeText(this, "فشل التحميل: " + errorMessage, Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
+        DownloadManager.getInstance().removeListener(this);
         if (ratingRunnable != null) {
             handler.removeCallbacks(ratingRunnable);
         }

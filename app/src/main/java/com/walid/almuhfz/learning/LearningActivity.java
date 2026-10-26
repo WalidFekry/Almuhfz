@@ -22,6 +22,7 @@ import com.walid.almuhfz.R;
 import com.walid.almuhfz.db.QuranDatabase;
 import com.walid.almuhfz.db.entity.AyahEntity;
 import com.walid.almuhfz.db.mapper.AyahMapper;
+import com.walid.almuhfz.download.DownloadManager;
 import com.walid.almuhfz.learning.models.Ayah;
 import com.walid.almuhfz.learning.models.LearningData;
 import com.walid.almuhfz.utils.AppExecutors;
@@ -80,9 +81,15 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
 
     private void loadAyahsData() {
         int surahNumber = learningData.getSoraDetails().getNumber() != null ? learningData.getSoraDetails().getNumber() : 1;
+        String reciterId = (learningData.getSelectedReciter() != null && learningData.getSelectedReciter().getIdentifier() != null)
+                ? learningData.getSelectedReciter().getIdentifier() : "";
 
         AppExecutors.getInstance().diskIO().execute(() -> {
-            List<AyahEntity> roomData = QuranDatabase.getInstance(getApplicationContext()).quranDao().getAyahsBySurah(surahNumber);
+            List<AyahEntity> roomData = QuranDatabase.getInstance(getApplicationContext()).quranDao().getAyahsBySurahAndReciter(surahNumber, reciterId);
+            if (roomData == null || roomData.isEmpty()) {
+                roomData = QuranDatabase.getInstance(getApplicationContext()).quranDao().getAyahsBySurah(surahNumber);
+            }
+
             List<Ayah> selectedAyasList = new ArrayList<>();
 
             int from = learningData.getSelectedFrom();
@@ -150,7 +157,7 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
         ayasRecyclerView.setAdapter(ayasAdapter);
 
         if (learningData.getSelectedReciter() != null && learningData.getSelectedReciter().getName() != null) {
-            reciterName.setText(learningData.getSelectedReciter().getName());
+            reciterName.setText(learningData.getSelectedReciter().getName() + " - " + learningData.getSoraDetails().getName());
         }
     }
 
@@ -230,12 +237,14 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
 
         String title = (ayah.getText() != null) ? ayah.getText() : "آية " + (index + 1);
 
-        if (localFile.exists()) {
+        if (DownloadManager.isAudioFileValid(localFile)) {
             return JcAudio.createFromFilePath(title, localFile.getAbsolutePath());
         } else if (audioUrl != null && !audioUrl.isEmpty()) {
             return JcAudio.createFromURL(title, audioUrl);
+        } else {
+            showMessage("الملف الصوتي أوفلاين غير متاح أو تالف. يرجى الاتصال بالإنترنت.");
+            return null;
         }
-        return null;
     }
 
     @Override
