@@ -52,6 +52,7 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
     private static final String TAG = "LearningActivity";
     private static final String PREF_FONT_SIZE = "pref_quran_font_size";
     private static final String PREF_FONT_FAMILY = "pref_quran_font_family";
+    private static final String PREF_REPEAT_INTERVAL = "pref_quran_repeat_interval";
 
     private AyasAdapter ayasAdapter;
     private LearningData learningData;
@@ -87,6 +88,7 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
         SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
         currentFontSizeSp = prefs.getFloat(PREF_FONT_SIZE, 22f);
         currentFontResId = prefs.getInt(PREF_FONT_FAMILY, R.font.uthmanii);
+        pauseIntervalSeconds = prefs.getInt(PREF_REPEAT_INTERVAL, 0);
 
         initViews();
         loadAyahsData();
@@ -363,14 +365,30 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
     }
 
     private void showRepeatIntervalDialog() {
-        CharSequence[] options = new CharSequence[]{"بدون فاصل زمني (0 ثانية)", "1 ثانية", "2 ثانية", "3 ثواني", "5 ثواني"};
-        int selected = (pauseIntervalSeconds == 0) ? 0 : (pauseIntervalSeconds == 1) ? 1 : (pauseIntervalSeconds == 2) ? 2 : (pauseIntervalSeconds == 3) ? 3 : 4;
+        CharSequence[] options = new CharSequence[]{"بدون فاصل زمني", "2 ثانية", "4 ثواني", "6 ثواني", "8 ثواني", "10 ثواني"};
+        int selected = (pauseIntervalSeconds == 2) ? 1 :
+                (pauseIntervalSeconds == 4) ? 2 :
+                (pauseIntervalSeconds == 6) ? 3 :
+                (pauseIntervalSeconds == 8) ? 4 :
+                (pauseIntervalSeconds == 10) ? 5 : 0;
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("اختر الفاصل الزمني بين التكرارات ⏱️");
         builder.setSingleChoiceItems(options, selected, (dialog, which) -> {
-            pauseIntervalSeconds = (which == 0) ? 0 : (which == 1) ? 1 : (which == 2) ? 2 : (which == 3) ? 3 : 5;
-            Toast.makeText(this, "تم ضبط الفاصل الزمني إلى " + pauseIntervalSeconds + " ثانية", Toast.LENGTH_SHORT).show();
+            pauseIntervalSeconds = (which == 1) ? 2 :
+                    (which == 2) ? 4 :
+                    (which == 3) ? 6 :
+                    (which == 4) ? 8 :
+                    (which == 5) ? 10 : 0;
+
+            SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+            prefs.edit().putInt(PREF_REPEAT_INTERVAL, pauseIntervalSeconds).apply();
+
+            if (pauseIntervalSeconds == 0) {
+                Toast.makeText(this, "تم إيقاف الفاصل الزمني بين التكرارات", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "تم ضبط وحفظ الفاصل الزمني إلى " + pauseIntervalSeconds + " ثواني", Toast.LENGTH_SHORT).show();
+            }
             dialog.dismiss();
         });
         builder.setNegativeButton("إلغاء", null);
