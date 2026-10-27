@@ -74,10 +74,25 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnDeleteAll"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:background="@drawable/value_background"
+                    android:backgroundTint="@color/red"
+                    android:fontFamily="@font/jazeera"
+                    android:paddingHorizontal="12dp"
+                    android:text="@string/delete_all_downloads"
+                    android:textColor="@color/text_on_primary"
+                    android:textSize="13sp" />
+
+
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:layout_gravity="end"
+                    android:gravity="end"
                     android:orientation="vertical">
 
                     <TextView
@@ -101,17 +116,6 @@
                         tools:text="45.8 MB" />
                 </LinearLayout>
 
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/btnDeleteAll"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:background="@drawable/value_background"
-                    android:backgroundTint="@color/red"
-                    android:fontFamily="@font/jazeera"
-                    android:paddingHorizontal="12dp"
-                    android:text="@string/delete_all_downloads"
-                    android:textColor="@color/text_on_primary"
-                    android:textSize="13sp" />
 
             </LinearLayout>
 
@@ -123,7 +127,7 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/tvCompletedCount"
+                    android:id="@+id/tvFailedCount"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -131,7 +135,8 @@
                     android:gravity="center"
                     android:textColor="@color/text_secondary_color"
                     android:textSize="13sp"
-                    tools:text="المكتملة: 5" />
+                    tools:text="فشلت/متوقفة: 0" />
+
 
                 <TextView
                     android:id="@+id/tvDownloadingCount"
@@ -145,7 +150,7 @@
                     tools:text="جاري التحميل: 1" />
 
                 <TextView
-                    android:id="@+id/tvFailedCount"
+                    android:id="@+id/tvCompletedCount"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -153,8 +158,7 @@
                     android:gravity="center"
                     android:textColor="@color/text_secondary_color"
                     android:textSize="13sp"
-                    tools:text="فشلت/متوقفة: 0" />
-
+                    tools:text="المكتملة: 5" />
             </LinearLayout>
 
         </LinearLayout>
@@ -170,6 +174,8 @@
 
         <LinearLayout
             android:layout_width="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
@@ -177,7 +183,7 @@
                 android:id="@+id/chipAll"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="4dp"
                 android:background="@drawable/value_background"
                 android:backgroundTint="@color/primary_color"
                 android:fontFamily="@font/jazeera"
@@ -185,34 +191,34 @@
                 android:paddingVertical="8dp"
                 android:text="@string/filter_all"
                 android:textColor="@color/text_on_primary"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:textStyle="bold" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/chipCompleted"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="4dp"
                 android:background="@drawable/value_background"
                 android:fontFamily="@font/jazeera"
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="8dp"
                 android:text="@string/filter_completed"
                 android:textColor="@color/text_primary_color"
-                android:textSize="13sp" />
+                android:textSize="12sp" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/chipDownloading"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="4dp"
                 android:background="@drawable/value_background"
                 android:fontFamily="@font/jazeera"
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="8dp"
                 android:text="@string/filter_downloading"
                 android:textColor="@color/text_primary_color"
-                android:textSize="13sp" />
+                android:textSize="12sp" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/chipFailed"
@@ -224,7 +230,7 @@
                 android:paddingVertical="8dp"
                 android:text="@string/filter_failed"
                 android:textColor="@color/text_primary_color"
-                android:textSize="13sp" />
+                android:textSize="12sp" />
 
         </LinearLayout>
     </HorizontalScrollView>
@@ -242,6 +248,7 @@
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:paddingHorizontal="12dp"
+            tools:listitem="@layout/item_download_surah"
             android:paddingBottom="16dp" />
 
         <ProgressBar

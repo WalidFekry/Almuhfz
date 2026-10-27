@@ -2,6 +2,7 @@ package com.walid.almuhfz.learning;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Typeface;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +11,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.walid.almuhfz.R;
@@ -25,6 +27,7 @@ public class AyasAdapter extends RecyclerView.Adapter<AyasAdapter.Holder> {
     private final List<Ayah> ayahList;
     private final Interaction interaction;
     private float fontSizeSp = 22f;
+    private int fontResId = R.font.uthmanii;
 
     public AyasAdapter(List<Ayah> ayahList, Interaction interaction) {
         this.ayahList = ayahList;
@@ -33,6 +36,11 @@ public class AyasAdapter extends RecyclerView.Adapter<AyasAdapter.Holder> {
 
     public void setFontSizeSp(float fontSizeSp) {
         this.fontSizeSp = fontSizeSp;
+        notifyDataSetChanged();
+    }
+
+    public void setFontResId(int fontResId) {
+        this.fontResId = fontResId;
         notifyDataSetChanged();
     }
 
@@ -58,6 +66,13 @@ public class AyasAdapter extends RecyclerView.Adapter<AyasAdapter.Holder> {
         holder.ayaTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSizeSp);
 
         Context context = holder.ayaTextView.getContext();
+        try {
+            Typeface typeface = ResourcesCompat.getFont(context, fontResId);
+            if (typeface != null) {
+                holder.ayaTextView.setTypeface(typeface);
+            }
+        } catch (Exception ignored) {}
+
         boolean isSelected = (selectedAyaIndex != RecyclerView.NO_POSITION && selectedAyaIndex == adapterPosition);
 
         int textColor = isSelected ?

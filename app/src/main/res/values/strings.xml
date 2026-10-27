@@ -20,5 +20,5 @@
     <string name="filter_all">الكل</string>
     <string name="filter_completed">المكتملة</string>
     <string name="filter_downloading">قيد التحميل</string>
-    <string name="filter_failed">المتوقفة / الفاشلة</string>
+    <string name="filter_failed">المتوقفة</string>
 </resources>

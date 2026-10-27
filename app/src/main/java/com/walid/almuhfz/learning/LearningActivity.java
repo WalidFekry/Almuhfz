@@ -51,6 +51,7 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
 
     private static final String TAG = "LearningActivity";
     private static final String PREF_FONT_SIZE = "pref_quran_font_size";
+    private static final String PREF_FONT_FAMILY = "pref_quran_font_family";
 
     private AyasAdapter ayasAdapter;
     private LearningData learningData;
@@ -65,6 +66,7 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
 
     private int pauseIntervalSeconds = 0;
     private float currentFontSizeSp = 22f;
+    private int currentFontResId = R.font.uthmanii;
 
     private long playStartTimestamp = 0L;
 
@@ -84,6 +86,7 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
 
         SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
         currentFontSizeSp = prefs.getFloat(PREF_FONT_SIZE, 22f);
+        currentFontResId = prefs.getInt(PREF_FONT_FAMILY, R.font.uthmanii);
 
         initViews();
         loadAyahsData();
@@ -232,6 +235,7 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
         }
         ayasAdapter = new AyasAdapter(learningData.getSoraDetails().getAyahs(), this);
         ayasAdapter.setFontSizeSp(currentFontSizeSp);
+        ayasAdapter.setFontResId(currentFontResId);
         ayasRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         ayasRecyclerView.setAdapter(ayasAdapter);
 
@@ -374,11 +378,48 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
     }
 
     private void showFontSizeDialog() {
+        CharSequence[] options = new CharSequence[]{"نوع خط القراءة 🔤", "حجم الخط القرآني 📏"};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("تنسيق الخط والقراءة 📖");
+        builder.setItems(options, (dialog, which) -> {
+            if (which == 0) {
+                showFontTypefaceDialog();
+            } else {
+                showFontSizeSelectionDialog();
+            }
+        });
+        builder.setNegativeButton("إلغاء", null);
+        builder.show();
+    }
+
+    private void showFontTypefaceDialog() {
+        CharSequence[] fonts = new CharSequence[]{"الخط العثماني الاصلي (Uthmanii)", "الخط القرآني المبسّط (Quran)"};
+        int selected = (currentFontResId == R.font.quran) ? 1 : 0;
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("اختر خط القراءة المصحفي 🔤");
+        builder.setSingleChoiceItems(fonts, selected, (dialog, which) -> {
+            currentFontResId = (which == 1) ? R.font.quran : R.font.uthmanii;
+            SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+            prefs.edit().putInt(PREF_FONT_FAMILY, currentFontResId).apply();
+
+            if (ayasAdapter != null) {
+                ayasAdapter.setFontResId(currentFontResId);
+            }
+            dialog.dismiss();
+            Toast.makeText(this, "تم تغيير خط القراءة بنجاح", Toast.LENGTH_SHORT).show();
+        });
+        builder.setNegativeButton("إلغاء", null);
+        builder.show();
+    }
+
+    private void showFontSizeSelectionDialog() {
         CharSequence[] sizes = new CharSequence[]{"صغير (18 sp)", "متوسط (22 sp)", "كبير (26 sp)", "كبير جداً (30 sp)"};
         int selected = (currentFontSizeSp <= 18f) ? 0 : (currentFontSizeSp <= 22f) ? 1 : (currentFontSizeSp <= 26f) ? 2 : 3;
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("اختر حجم الخط القرآني 🔤");
+        builder.setTitle("اختر حجم الخط القرآني 📏");
         builder.setSingleChoiceItems(sizes, selected, (dialog, which) -> {
             currentFontSizeSp = (which == 0) ? 18f : (which == 1) ? 22f : (which == 2) ? 26f : 30f;
             SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);

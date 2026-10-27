@@ -74,6 +74,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/jazeera"
+                            android:layout_gravity="center"
+                            android:gravity="center"
                             android:text="إدارة الملفات"
                             android:textColor="@color/text_secondary_color"
                             android:textSize="11sp" />
@@ -119,6 +121,8 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
                             android:fontFamily="@font/jazeera"
                             android:text="داكن / فاتح"
                             android:textColor="@color/text_secondary_color"
@@ -163,7 +167,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/jazeera"
-                        android:text="المحفوظات 🔖"
+                        android:text="المحفوظات"
                         android:textColor="@color/primary_color"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -211,7 +215,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/jazeera"
-                        android:text="تذكير الورد ⏰"
+                        android:text="تذكير الورد"
                         android:textColor="@color/primary_color"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -533,12 +537,108 @@
             android:textStyle="bold"
             android:visibility="visible" />
 
-        <ImageView
-            android:id="@+id/rating"
+        <!-- Rating and Share App Row -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="90dp"
-            android:contentDescription="تقييم التطبيق"
-            android:src="@drawable/rating" />
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="16dp"
+            android:baselineAligned="false"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <!-- Card 1: Rate App -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="0dp"
+                android:layout_height="82dp"
+                android:layout_marginEnd="5dp"
+                android:layout_weight="1"
+                app:cardBackgroundColor="@color/surface_card"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <ImageView
+                    android:id="@+id/rating"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clickable="true"
+                    android:contentDescription="تقييم التطبيق"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/rating" />
+            </androidx.cardview.widget.CardView>
+
+            <!-- Card 2: Share App -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/btnShareApp"
+                android:layout_width="0dp"
+                android:layout_height="82dp"
+                android:layout_marginStart="5dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="@color/surface_card"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/value_background"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="8dp">
+
+                    <FrameLayout
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="@drawable/value_background"
+                        android:backgroundTint="@color/primary_color">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="مشاركة التطبيق"
+                            android:src="@drawable/ic_menu_share"
+                            app:tint="@color/text_on_primary" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/jazeera"
+                            android:text="مشاركة التطبيق"
+                            android:gravity="center"
+                            android:layout_gravity="center"
+                            android:textColor="@color/text_primary_color"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:fontFamily="@font/jazeera"
+                            android:gravity="center"
+                            android:layout_gravity="center"
+                            android:text="انشر الخير والقرآن"
+                            android:textColor="@color/text_secondary_color"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 </androidx.core.widget.NestedScrollView>

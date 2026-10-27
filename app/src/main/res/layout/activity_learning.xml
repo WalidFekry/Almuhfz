@@ -60,7 +60,7 @@
             android:background="@drawable/value_background"
             android:fontFamily="@font/jazeera"
             android:paddingHorizontal="8dp"
-            android:text="حفظ علامة 🔖"
+            android:text="حفظ 🔖"
             android:textColor="@color/text_primary_color"
             android:textSize="12sp" />
 
@@ -86,7 +86,7 @@
             android:background="@drawable/value_background"
             android:fontFamily="@font/jazeera"
             android:paddingHorizontal="8dp"
-            android:text="حجم الخط 🔤"
+            android:text="الخط 🔤"
             android:textColor="@color/text_primary_color"
             android:textSize="12sp" />
 

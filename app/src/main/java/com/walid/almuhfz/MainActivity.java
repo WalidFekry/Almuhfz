@@ -164,7 +164,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "رائع! 🎉 الآن ستتلقى اقتباسات ورسائل تفاؤل تحفزك يوميًا! 😊", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "رائع! الآن ستتلقى اقتباسات ورسائل تفاؤل تحفزك يوميًا! 😊", Toast.LENGTH_LONG).show();
             } else {
                 if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.POST_NOTIFICATIONS)) {
                     showSettingsDialog();
@@ -298,7 +298,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         CharSequence[] options = new CharSequence[]{"ابدأ التعلم الآن", "إعادة التحميل", "حذف الملفات المحفوظة", "إلغاء"};
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("السورة محفوظة أوفلاين 🎉");
+        builder.setTitle("السورة محفوظة أوفلاين");
         builder.setItems(options, (dialog, which) -> {
             if (which == 0) {
                 startLearningActivity();
@@ -375,7 +375,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         startLearn.setOnClickListener(view -> startLearningActivity());
 
+        View btnShareApp = findViewById(R.id.btnShareApp);
+        if (btnShareApp != null) {
+            btnShareApp.setOnClickListener(v -> shareAppWithFriends());
+        }
+
         rateApp.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.walid.almuhfz"))));
+    }
+
+    private void shareAppWithFriends() {
+        try {
+            Intent sendIntent = new Intent();
+            sendIntent.setAction(Intent.ACTION_SEND);
+            String shareMessage = "تطبيق المٌحفظ للقرآن الكريم - المصحف المعلم 📖\n\n"
+                    + "تطبيق رائع يجمع بين استماع وتكرار آيات القرآن الكريم بصوت أشهر القراء، والمساعدة في الحفظ والمراجعة مع خاصية التكرار والتذكير اليومي والتنزيل أوفلاين بدون إنترنت! 🌿\n\n"
+                    + "انشر الخير وشاركه مع عائلتك وأصدقائك فالدال على الخير كفاعله 💙\n\n"
+                    + "حمل التطبيق الآن مجاناً من متجر جوجل بلاي 👇\n"
+                    + "https://play.google.com/store/apps/details?id=" + getPackageName();
+
+            sendIntent.putExtra(Intent.EXTRA_SUBJECT, "تطبيق المٌحفظ للقرآن الكريم - المصحف المعلم 🌸");
+            sendIntent.putExtra(Intent.EXTRA_TEXT, shareMessage);
+            sendIntent.setType("text/plain");
+            startActivity(Intent.createChooser(sendIntent, "مشاركة التطبيق عبر..."));
+        } catch (Exception e) {
+            Log.e(TAG, "Error sharing app", e);
+        }
     }
 
     private void initViews() {
@@ -900,9 +924,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.nav_reminder) {
-            startActivity(new Intent(this, ReminderSettingsActivity.class));
-        } else if (id == R.id.maktbtiplus) {
+        if (id == R.id.maktbtiplus) {
             Intent o = new Intent(Intent.ACTION_VIEW);
             o.setData(Uri.parse("https://walid-fekry.com/maktbti-plus/"));
             startActivity(o);
@@ -967,7 +989,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 && surahNumber == soraDetails.getNumber()
                 && reciterId.equals(selectedReciter.getIdentifier())) {
             updateDownloadUiState();
-            Toast.makeText(this, "تم تحميل السورة بالكامل وإضافتها للتحميلات أوفلاين 🎉", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "تم تحميل السورة بالكامل وإضافتها للتحميلات أوفلاين", Toast.LENGTH_LONG).show();
         }
     }
 

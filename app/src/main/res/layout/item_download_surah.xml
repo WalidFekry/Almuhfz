@@ -40,6 +40,7 @@
                 android:background="@drawable/value_background"
                 android:fontFamily="@font/jazeera"
                 android:paddingHorizontal="10dp"
+                android:layout_marginStart="8dp"
                 android:paddingVertical="4dp"
                 android:textColor="@color/text_on_primary"
                 android:textSize="12sp"
@@ -53,6 +54,8 @@
             android:id="@+id/tvReciterName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
             android:layout_marginTop="2dp"
             android:fontFamily="@font/jazeera"
             android:textColor="@color/text_secondary_color"
@@ -66,6 +69,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:fontFamily="@font/jazeera"
+            android:layout_gravity="center"
+            android:gravity="center"
             android:textColor="@color/text_secondary_color"
             android:textSize="12sp"
             tools:text="7/7 آية • 2.4 MB" />
@@ -92,6 +97,8 @@
             android:fontFamily="@font/jazeera"
             android:textColor="@color/red"
             android:textSize="12sp"
+            android:layout_gravity="center"
+            android:gravity="center"
             android:visibility="gone"
             tools:text="حدث خطأ أثناء تنزيل الآية رقم 3"
             tools:visibility="visible" />
@@ -112,19 +119,17 @@
             android:orientation="horizontal">
 
             <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/btnPlayOffline"
+                android:id="@+id/btnDelete"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
-                android:layout_marginEnd="8dp"
                 android:background="@drawable/value_background"
-                android:backgroundTint="@color/button_green"
+                android:backgroundTint="@color/red"
                 android:fontFamily="@font/jazeera"
                 android:paddingHorizontal="14dp"
-                android:text="استماع أوفلاين"
+                android:layout_marginEnd="8dp"
+                android:text="حذف"
                 android:textColor="@color/text_on_primary"
-                android:textSize="12sp"
-                android:visibility="gone"
-                tools:visibility="visible" />
+                android:textSize="12sp" />
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnResumeRetry"
@@ -156,16 +161,18 @@
                 tools:visibility="visible" />
 
             <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/btnDelete"
+                android:id="@+id/btnPlayOffline"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
                 android:background="@drawable/value_background"
-                android:backgroundTint="@color/red"
+                android:backgroundTint="@color/button_green"
                 android:fontFamily="@font/jazeera"
                 android:paddingHorizontal="14dp"
-                android:text="حذف"
+                android:text="استماع"
                 android:textColor="@color/text_on_primary"
-                android:textSize="12sp" />
+                android:textSize="12sp"
+                android:visibility="gone"
+                tools:visibility="visible" />
 
         </LinearLayout>
 
