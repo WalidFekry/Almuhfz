@@ -1,21 +1,39 @@
 # Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Preserve SourceFile and LineNumberTable for crash stacktrace de-obfuscation in Play Console
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# --- GSON & Retrofit Models ---
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
+-keepclassmembers class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+    @com.google.gson.annotations.Expose <fields>;
+}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Keep All Model & Entity Classes
+-keep class com.walid.almuhfz.learning.models.** { *; }
+-keep class com.walid.almuhfz.notifications_messages.model.** { *; }
+-keep class com.walid.almuhfz.db.entity.** { *; }
+-keep class com.walid.almuhfz.notifications_messages.db.** { *; }
+-keep class com.walid.almuhfz.download.DownloadItem { *; }
+
+# --- Room Database ---
+-keep class * extends androidx.room.RoomDatabase
+-dontwarn androidx.room.paging.**
+
+# --- Retrofit & OkHttp ---
+-dontwarn retrofit2.**
+-keep class retrofit2.** { *; }
+-dontwarn okhttp3.**
+-dontwarn okio.**
+
+# --- JcPlayer ---
+-keep class com.example.jean.jcplayer.** { *; }
+
+# --- Lottie ---
+-keep class com.airbnb.lottie.** { *; }
+
+# --- Firebase & Google Play Services ---
+-dontwarn com.google.firebase.**
+-dontwarn com.google.android.gms.**

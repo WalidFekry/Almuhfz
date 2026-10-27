@@ -4,6 +4,7 @@
     <style name="Theme.Almuhfz" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary brand colors -->
         <item name="colorPrimary">@color/primary_color</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
         <item name="colorPrimaryVariant">@color/primary_dark</item>
         <item name="colorOnPrimary">@color/text_on_primary</item>
 
@@ -19,6 +20,7 @@
         <!-- Status bar and Navigation bar -->
         <item name="android:statusBarColor">@color/primary_dark</item>
         <item name="android:navigationBarColor">@color/primary_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 
     <!-- Unified AndroidX Splash Screen Theme -->

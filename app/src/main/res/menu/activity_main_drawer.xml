@@ -25,12 +25,8 @@
             android:icon="@drawable/ic_web"
             android:title="قناتنا على التليجرام" />
         <item
-            android:id="@+id/ayak"
-            android:icon="@drawable/ic_copy_item"
-            android:title="آية الكرسي مكررة" />
-        <item
             android:id="@+id/maktbtiplus"
-            android:icon="@drawable/ic_copy_item"
+            android:icon="@drawable/download"
             android:title="مكتبتي بلس" />
         <item
             android:id="@+id/mass"
@@ -39,9 +35,9 @@
         <item
             android:id="@+id/sysa"
             android:icon="@drawable/ic_boot"
-            android:title="Privacy Policy - سياسة الخصوصية" />
+            android:title="سياسة الخصوصية" />
         <item
-            android:id="@+id/walidmore"
+            android:id="@+id/more_apps"
             android:icon="@drawable/walidmore"
             android:title="المزيد من التطبيقات المجانية" />
     </group>

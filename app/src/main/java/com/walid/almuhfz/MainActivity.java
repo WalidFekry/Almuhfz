@@ -206,7 +206,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     saveLastPromptData(promptCount + 1);
                 }
             };
-            handler.postDelayed(ratingRunnable, 5000);
+            handler.postDelayed(ratingRunnable, 10000);
         }
     }
 
@@ -926,15 +926,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int id = item.getItemId();
         if (id == R.id.maktbtiplus) {
             Intent o = new Intent(Intent.ACTION_VIEW);
-            o.setData(Uri.parse("https://walid-fekry.com/maktbti-plus/"));
+            o.setData(Uri.parse("https://play.google.com/store/apps/details?id=com.maktbti.plus"));
             startActivity(o);
         } else if (id == R.id.facegroub) {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/groups/440403217380641")));
         } else if (id == R.id.teleee) {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/App_Maktbti")));
-        } else if (id == R.id.ayak) {
-            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.co/2xVh8rqVLS")));
-        } else if (id == R.id.ratee) {
+        }else if (id == R.id.ratee) {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.walid.almuhfz")));
         } else if (id == R.id.shareee) {
             shareAppWithFriends();
@@ -945,8 +943,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startActivity(Intent.createChooser(emailIntent, "Send email..."));
         } else if (id == R.id.sysa) {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://sites.google.com/view/almuhfz/home")));
-        } else if (id == R.id.walidmore) {
-            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.co/US34fsUZeW")));
+        } else if (id == R.id.more_apps) {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/dev?id=6257553101128037563")));
         } else if (id == R.id.notification_messages) {
             Intent i = new Intent(this, NotificationsMessagesActivity.class);
             startActivity(i);
