@@ -1,8 +1,11 @@
 package com.walid.almuhfz.notifications_messages.utils;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -21,6 +24,8 @@ import android.text.TextPaint;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
 
@@ -99,10 +104,14 @@ public class QuoteImageGenerator {
 
         int maxTextWidth = width - 180;
         StaticLayout staticLayout;
-        staticLayout = StaticLayout.Builder.obtain(formattedText, 0, formattedText.length(), textPaint, maxTextWidth)
-                .setAlignment(Layout.Alignment.ALIGN_CENTER)
-                .setLineSpacing(14f, 1.2f)
-                .build();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            staticLayout = StaticLayout.Builder.obtain(formattedText, 0, formattedText.length(), textPaint, maxTextWidth)
+                    .setAlignment(Layout.Alignment.ALIGN_CENTER)
+                    .setLineSpacing(14f, 1.2f)
+                    .build();
+        } else {
+            staticLayout = new StaticLayout(formattedText, textPaint, maxTextWidth, Layout.Alignment.ALIGN_CENTER, 1.2f, 14f, false);
+        }
 
         int textHeight = staticLayout.getHeight();
         float startY = (height / 2f) - (textHeight / 2f);
@@ -133,6 +142,17 @@ public class QuoteImageGenerator {
 
     public static boolean saveQuoteImageToGallery(Context context, String messageText, int messageNumber, String dateText) {
         if (context == null) return false;
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                if (context instanceof Activity) {
+                    ActivityCompat.requestPermissions((Activity) context, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 3001);
+                }
+                Toast.makeText(context, "يرجى منح إذن التخزين لحفظ الصور في المعرض 🖼️", Toast.LENGTH_LONG).show();
+                return false;
+            }
+        }
+
         try {
             Bitmap bitmap = generateQuoteBitmap(context, messageText, messageNumber, dateText);
             String fileName = "Almuhfz_Quote_" + messageNumber + "_" + System.currentTimeMillis() + ".png";
@@ -150,16 +170,13 @@ public class QuoteImageGenerator {
                     fos = context.getContentResolver().openOutputStream(imageUri);
                 }
             } else {
-                String savedImageUriStr = MediaStore.Images.Media.insertImage(
-                        context.getContentResolver(),
-                        bitmap,
-                        fileName,
-                        "صورة اقتباس من تطبيق المٌحفظ"
-                );
-                if (savedImageUriStr != null) {
-                    Toast.makeText(context, "تم حفظ صورة الاقتباس بنجاح في المعرض 🖼️", Toast.LENGTH_SHORT).show();
-                    return true;
+                File imagesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+                File albumDir = new File(imagesDir, "AlmuhfzQuotes");
+                if (!albumDir.exists()) {
+                    albumDir.mkdirs();
                 }
+                File imageFile = new File(albumDir, fileName);
+                fos = new FileOutputStream(imageFile);
             }
 
             if (fos != null) {
