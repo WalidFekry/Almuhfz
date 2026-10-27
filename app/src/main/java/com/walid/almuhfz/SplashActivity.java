@@ -3,30 +3,26 @@ package com.walid.almuhfz;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.splashscreen.SplashScreen;
 
 import com.walid.almuhfz.utils.ThemeManager;
 
 @SuppressLint("CustomSplashScreen")
 public class SplashActivity extends AppCompatActivity {
-    private static final int SPLASH_TIME_OUT = 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        SplashScreen.installSplashScreen(this);
         ThemeManager.applySavedTheme(this);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_splash);
-        navigateToMainAfterDelay();
-    }
 
-    private void navigateToMainAfterDelay() {
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            Intent intent = new Intent(SplashActivity.this, MainActivity.class);
-            startActivity(intent);
-            finish();
-        }, SPLASH_TIME_OUT);
+        Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+        if (getIntent() != null && getIntent().getExtras() != null) {
+            intent.putExtras(getIntent().getExtras());
+        }
+        startActivity(intent);
+        finish();
     }
 }
