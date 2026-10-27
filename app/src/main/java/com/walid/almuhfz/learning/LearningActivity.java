@@ -1,15 +1,20 @@
 package com.walid.almuhfz.learning;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,29 +26,47 @@ import com.example.jean.jcplayer.view.JcPlayerView;
 import com.walid.almuhfz.R;
 import com.walid.almuhfz.db.QuranDatabase;
 import com.walid.almuhfz.db.entity.AyahEntity;
+import com.walid.almuhfz.db.entity.BookmarkEntity;
 import com.walid.almuhfz.db.mapper.AyahMapper;
 import com.walid.almuhfz.download.DownloadManager;
 import com.walid.almuhfz.learning.models.Ayah;
 import com.walid.almuhfz.learning.models.LearningData;
+import com.walid.almuhfz.learning.models.SoraDetailsResponse;
+import com.walid.almuhfz.learning.networking.RetrofitClient;
 import com.walid.almuhfz.utils.AppExecutors;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import java.io.File;
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class LearningActivity extends AppCompatActivity implements AyasAdapter.Interaction, JcPlayerManagerListener {
 
     private static final String TAG = "LearningActivity";
+    private static final String PREF_FONT_SIZE = "pref_quran_font_size";
 
     private AyasAdapter ayasAdapter;
     private LearningData learningData;
     private TextView reciterName;
     private RecyclerView ayasRecyclerView;
     private JcPlayerView player;
+    private Button btnBookmarkCurrent, btnRepeatInterval, btnFontCustomization;
+
     private int currentPlayIndex = 0;
     private int currentRepeatAyaIndex = 1;
     private int currentRepeatSoraIndex = 1;
+
+    private int pauseIntervalSeconds = 0;
+    private float currentFontSizeSp = 22f;
+
+    private long playStartTimestamp = 0L;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Runnable audioCompletedRunnable;
@@ -58,6 +81,9 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
             finish();
             return;
         }
+
+        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+        currentFontSizeSp = prefs.getFloat(PREF_FONT_SIZE, 22f);
 
         initViews();
         loadAyahsData();
@@ -82,7 +108,7 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
     private void loadAyahsData() {
         int surahNumber = learningData.getSoraDetails().getNumber() != null ? learningData.getSoraDetails().getNumber() : 1;
         String reciterId = (learningData.getSelectedReciter() != null && learningData.getSelectedReciter().getIdentifier() != null)
-                ? learningData.getSelectedReciter().getIdentifier() : "";
+                ? learningData.getSelectedReciter().getIdentifier() : "ar.alafasy";
 
         AppExecutors.getInstance().diskIO().execute(() -> {
             List<AyahEntity> roomData = QuranDatabase.getInstance(getApplicationContext()).quranDao().getAyahsBySurahAndReciter(surahNumber, reciterId);
@@ -101,23 +127,68 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
                         selectedAyasList.add(AyahMapper.fromEntity(entity));
                     }
                 }
-            } else if (learningData.getSoraDetails().getAyahs() != null) {
+            } else if (learningData.getSoraDetails().getAyahs() != null && !learningData.getSoraDetails().getAyahs().isEmpty()) {
                 List<Ayah> allAyahs = learningData.getSoraDetails().getAyahs();
                 for (int i = 0; i < allAyahs.size(); i++) {
-                    if (i >= (from - 1) && i <= (to - 1)) {
-                        selectedAyasList.add(allAyahs.get(i));
+                    Ayah a = allAyahs.get(i);
+                    if (a != null && a.getNumberInSurah() >= from && a.getNumberInSurah() <= to) {
+                        selectedAyasList.add(a);
                     }
                 }
             }
 
-            Log.d(TAG, "selectedAyasList size: " + selectedAyasList.size());
-            learningData.getSoraDetails().setAyahs(selectedAyasList);
+            if (!selectedAyasList.isEmpty()) {
+                learningData.getSoraDetails().setAyahs(selectedAyasList);
+                AppExecutors.getInstance().mainThread().execute(() -> {
+                    if (isFinishing() || isDestroyed()) return;
+                    currentPlayIndex = Math.min(learningData.getInitialPlayIndex(), selectedAyasList.size() - 1);
+                    if (currentPlayIndex < 0) currentPlayIndex = 0;
+                    setAdapter();
+                    playAudio();
+                });
+            } else {
+                fetchSurahFromApi(surahNumber, reciterId, from, to);
+            }
+        });
+    }
 
-            AppExecutors.getInstance().mainThread().execute(() -> {
+    private void fetchSurahFromApi(int surahNumber, String reciterId, int from, int to) {
+        String activeReciter = (reciterId != null && !reciterId.isEmpty()) ? reciterId : "ar.alafasy";
+
+        RetrofitClient.getInstance().getApi().getSoraDetails(surahNumber, activeReciter).enqueue(new Callback<SoraDetailsResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<SoraDetailsResponse> call, @NonNull Response<SoraDetailsResponse> response) {
                 if (isFinishing() || isDestroyed()) return;
-                setAdapter();
-                playAudio();
-            });
+
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    List<Ayah> allAyahs = response.body().getData().getAyahs();
+                    List<Ayah> selectedAyasList = new ArrayList<>();
+                    if (allAyahs != null) {
+                        for (Ayah a : allAyahs) {
+                            if (a != null && a.getNumberInSurah() >= from && a.getNumberInSurah() <= to) {
+                                selectedAyasList.add(a);
+                            }
+                        }
+                    }
+
+                    if (!selectedAyasList.isEmpty()) {
+                        learningData.getSoraDetails().setAyahs(selectedAyasList);
+                        currentPlayIndex = Math.min(learningData.getInitialPlayIndex(), selectedAyasList.size() - 1);
+                        if (currentPlayIndex < 0) currentPlayIndex = 0;
+                        setAdapter();
+                        playAudio();
+                        return;
+                    }
+                }
+
+                showMessage("تعذر تحميل الآيات، يرجى التأكد من الاتصال بالإنترنت.");
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<SoraDetailsResponse> call, @NonNull Throwable t) {
+                if (isFinishing() || isDestroyed()) return;
+                showMessage("تعذر الاتصال بالشبكة لتحميل السورة.");
+            }
         });
     }
 
@@ -146,6 +217,13 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
                 Log.e(TAG, "Error playing audio", e);
             }
         }
+
+        if (ayasAdapter != null) {
+            ayasAdapter.setSelectedAyaIndex(currentPlayIndex);
+        }
+        if (ayasRecyclerView != null) {
+            ayasRecyclerView.post(() -> ayasRecyclerView.scrollToPosition(currentPlayIndex));
+        }
     }
 
     private void setAdapter() {
@@ -153,12 +231,19 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
             learningData.getSoraDetails().setAyahs(new ArrayList<>());
         }
         ayasAdapter = new AyasAdapter(learningData.getSoraDetails().getAyahs(), this);
+        ayasAdapter.setFontSizeSp(currentFontSizeSp);
         ayasRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         ayasRecyclerView.setAdapter(ayasAdapter);
 
-        if (learningData.getSelectedReciter() != null && learningData.getSelectedReciter().getName() != null) {
-            reciterName.setText(learningData.getSelectedReciter().getName() + " - " + learningData.getSoraDetails().getName());
-        }
+        String sName = (learningData.getSoraDetails() != null && learningData.getSoraDetails().getName() != null && !learningData.getSoraDetails().getName().trim().isEmpty())
+                ? learningData.getSoraDetails().getName()
+                : "سورة " + learningData.getSelectedSoraNumber();
+
+        String rName = (learningData.getSelectedReciter() != null && learningData.getSelectedReciter().getName() != null && !learningData.getSelectedReciter().getName().trim().isEmpty())
+                ? learningData.getSelectedReciter().getName()
+                : "القارئ";
+
+        reciterName.setText(rName + " - " + sName);
     }
 
     private void initViews() {
@@ -166,6 +251,14 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
         reciterName = findViewById(R.id.reciterName);
         ayasRecyclerView = findViewById(R.id.ayasRecyclerView);
         player = findViewById(R.id.jcplayer);
+
+        btnBookmarkCurrent = findViewById(R.id.btnBookmarkCurrent);
+        btnRepeatInterval = findViewById(R.id.btnRepeatInterval);
+        btnFontCustomization = findViewById(R.id.btnFontCustomization);
+
+        btnBookmarkCurrent.setOnClickListener(v -> showAddBookmarkDialog());
+        btnRepeatInterval.setOnClickListener(v -> showRepeatIntervalDialog());
+        btnFontCustomization.setOnClickListener(v -> showFontSizeDialog());
 
         player.findViewById(R.id.btnNext).setOnClickListener(view -> {
             List<Ayah> ayahs = learningData.getSoraDetails().getAyahs();
@@ -208,6 +301,96 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
                 ayasAdapter.setSelectedAyaIndex(currentPlayIndex);
             }
         });
+    }
+
+    private void showAddBookmarkDialog() {
+        if (learningData == null || learningData.getSoraDetails() == null) return;
+        List<Ayah> ayahs = learningData.getSoraDetails().getAyahs();
+        if (ayahs == null || currentPlayIndex >= ayahs.size()) return;
+
+        Ayah currentAyah = ayahs.get(currentPlayIndex);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("إضافة إلى المحفوظات 🔖");
+
+        final EditText etNote = new EditText(this);
+        etNote.setHint("إضافة ملاحظة شخصية (اختياري)");
+
+        builder.setView(etNote);
+
+        CharSequence[] categories = new CharSequence[]{"حفظ", "مراجعة", "إتقان"};
+        final String[] selectedCategory = {"حفظ"};
+
+        builder.setSingleChoiceItems(categories, 0, (dialog, which) -> {
+            if (which >= 0 && which < categories.length) {
+                selectedCategory[0] = categories[which].toString();
+            }
+        });
+
+        builder.setPositiveButton("حفظ", (dialog, which) -> {
+            String note = etNote.getText().toString().trim();
+            int surahNum = learningData.getSoraDetails().getNumber();
+            String surahName = learningData.getSoraDetails().getName();
+            int numberInSurah = currentAyah.getNumberInSurah();
+            String ayahText = currentAyah.getText();
+            String reciterId = (learningData.getSelectedReciter() != null) ? learningData.getSelectedReciter().getIdentifier() : "";
+
+            AppExecutors.getInstance().diskIO().execute(() -> {
+                BookmarkEntity entity = new BookmarkEntity(
+                        surahNum,
+                        surahName,
+                        numberInSurah,
+                        ayahText,
+                        reciterId,
+                        note,
+                        selectedCategory[0],
+                        System.currentTimeMillis()
+                );
+                QuranDatabase.getInstance(getApplicationContext()).quranDao().insertBookmark(entity);
+
+                AppExecutors.getInstance().mainThread().execute(() -> {
+                    Toast.makeText(this, "تمت إضافة الآية " + numberInSurah + " إلى المحفوظات", Toast.LENGTH_SHORT).show();
+                });
+            });
+        });
+
+        builder.setNegativeButton("إلغاء", null);
+        builder.show();
+    }
+
+    private void showRepeatIntervalDialog() {
+        CharSequence[] options = new CharSequence[]{"بدون فاصل زمني (0 ثانية)", "1 ثانية", "2 ثانية", "3 ثواني", "5 ثواني"};
+        int selected = (pauseIntervalSeconds == 0) ? 0 : (pauseIntervalSeconds == 1) ? 1 : (pauseIntervalSeconds == 2) ? 2 : (pauseIntervalSeconds == 3) ? 3 : 4;
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("اختر الفاصل الزمني بين التكرارات ⏱️");
+        builder.setSingleChoiceItems(options, selected, (dialog, which) -> {
+            pauseIntervalSeconds = (which == 0) ? 0 : (which == 1) ? 1 : (which == 2) ? 2 : (which == 3) ? 3 : 5;
+            Toast.makeText(this, "تم ضبط الفاصل الزمني إلى " + pauseIntervalSeconds + " ثانية", Toast.LENGTH_SHORT).show();
+            dialog.dismiss();
+        });
+        builder.setNegativeButton("إلغاء", null);
+        builder.show();
+    }
+
+    private void showFontSizeDialog() {
+        CharSequence[] sizes = new CharSequence[]{"صغير (18 sp)", "متوسط (22 sp)", "كبير (26 sp)", "كبير جداً (30 sp)"};
+        int selected = (currentFontSizeSp <= 18f) ? 0 : (currentFontSizeSp <= 22f) ? 1 : (currentFontSizeSp <= 26f) ? 2 : 3;
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("اختر حجم الخط القرآني 🔤");
+        builder.setSingleChoiceItems(sizes, selected, (dialog, which) -> {
+            currentFontSizeSp = (which == 0) ? 18f : (which == 1) ? 22f : (which == 2) ? 26f : 30f;
+            SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+            prefs.edit().putFloat(PREF_FONT_SIZE, currentFontSizeSp).apply();
+
+            if (ayasAdapter != null) {
+                ayasAdapter.setFontSizeSp(currentFontSizeSp);
+            }
+            dialog.dismiss();
+        });
+        builder.setNegativeButton("إلغاء", null);
+        builder.show();
     }
 
     private JcAudio getNextAudio(int index) {
@@ -263,11 +446,18 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
             handler.removeCallbacks(audioCompletedRunnable);
         }
 
+        long extraDelayMs = Math.max(0, pauseIntervalSeconds * 1000L);
+
         audioCompletedRunnable = () -> {
             if (isFinishing() || isDestroyed()) return;
 
-            if (currentRepeatAyaIndex < learningData.getRepeatAya()) {
-                currentRepeatAyaIndex += 1;
+            int repeatLimit = learningData.getRepeatAya();
+            boolean isInfiniteRepeat = (repeatLimit == -1 || repeatLimit == 0);
+
+            if (isInfiniteRepeat || currentRepeatAyaIndex < repeatLimit) {
+                if (!isInfiniteRepeat) {
+                    currentRepeatAyaIndex += 1;
+                }
             } else {
                 currentPlayIndex += 1;
                 currentRepeatAyaIndex = 1;
@@ -302,7 +492,7 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
             }
         };
 
-        handler.postDelayed(audioCompletedRunnable, 200);
+        handler.postDelayed(audioCompletedRunnable, 200 + extraDelayMs);
     }
 
     private void showMessage(String message) {
@@ -323,7 +513,9 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
     public void onPaused(@NonNull JcStatus jcStatus) {}
 
     @Override
-    public void onPlaying(@NonNull JcStatus jcStatus) {}
+    public void onPlaying(@NonNull JcStatus jcStatus) {
+        playStartTimestamp = System.currentTimeMillis();
+    }
 
     @Override
     public void onPreparedAudio(@NonNull JcStatus jcStatus) {}

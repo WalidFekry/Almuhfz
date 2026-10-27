@@ -17,7 +17,7 @@
         android:paddingTop="12dp"
         android:paddingBottom="16dp">
 
-        <!-- Quick Access Card (Downloads Manager & App Theme) -->
+        <!-- Quick Access Card 1 (Downloads Manager & App Theme) -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -129,6 +129,97 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
+        <!-- Quick Access Card 2 (Bookmarks, Search, Reminder) -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="@color/surface_card"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:padding="8dp">
+
+                <!-- Bookmarks -->
+                <LinearLayout
+                    android:id="@+id/cardBookmarks"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="3dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/value_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/jazeera"
+                        android:text="المحفوظات 🔖"
+                        android:textColor="@color/primary_color"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Search -->
+                <LinearLayout
+                    android:id="@+id/cardSearch"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="3dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/value_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/jazeera"
+                        android:text="البحث 🔍"
+                        android:textColor="@color/primary_color"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Reminder -->
+                <LinearLayout
+                    android:id="@+id/cardReminder"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="3dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/value_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/jazeera"
+                        android:text="تذكير الورد ⏰"
+                        android:textColor="@color/primary_color"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
         <!-- Reciter Card -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
@@ -148,6 +239,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/jazeera"
+                    android:layout_gravity="center"
+                    android:gravity="center"
                     android:text="اختر القارئ"
                     android:textColor="@color/text_secondary_color"
                     android:textSize="14sp"
@@ -189,6 +282,8 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/jazeera"
                     android:text="اختر السورة"
+                    android:gravity="center"
+                    android:layout_gravity="center"
                     android:textColor="@color/text_secondary_color"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -200,6 +295,16 @@
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
+                    <androidx.appcompat.widget.AppCompatImageButton
+                        android:id="@+id/download_button"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:background="@drawable/value_background"
+                        android:contentDescription="تحميل السورة"
+                        android:padding="12dp"
+                        android:src="@drawable/download"
+                        app:tint="@color/primary_color" />
+
                     <androidx.appcompat.widget.AppCompatTextView
                         android:id="@+id/sora_text_view"
                         android:layout_width="0dp"
@@ -209,21 +314,13 @@
                         android:fontFamily="@font/jazeera"
                         android:gravity="center"
                         android:padding="14dp"
+                        android:layout_marginStart="10dp"
                         android:text="الفاتحة"
                         android:textColor="@color/text_primary_color"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
-                    <androidx.appcompat.widget.AppCompatImageButton
-                        android:id="@+id/download_button"
-                        android:layout_width="52dp"
-                        android:layout_height="52dp"
-                        android:layout_marginStart="10dp"
-                        android:background="@drawable/value_background"
-                        android:contentDescription="تحميل السورة"
-                        android:padding="12dp"
-                        android:src="@drawable/download"
-                        app:tint="@color/primary_color" />
+
                 </LinearLayout>
 
                 <ProgressBar
@@ -241,6 +338,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
+                    android:layout_gravity="center"
+                    android:gravity="center"
                     android:fontFamily="@font/jazeera"
                     android:text="جاري التحميل..."
                     android:textColor="@color/text_secondary_color"
@@ -267,7 +366,38 @@
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/jazeera"
+                        android:text="إلى الآية"
+                        android:textColor="@color/text_secondary_color"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/toAyaTextView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/value_background"
+                        android:fontFamily="@font/jazeera"
+                        android:gravity="center"
+                        android:padding="12dp"
+                        android:text="1"
+                        android:textColor="@color/text_primary_color"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
                     android:layout_weight="1"
                     android:gravity="center"
                     android:orientation="vertical">
@@ -296,37 +426,7 @@
                         android:textStyle="bold" />
                 </LinearLayout>
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/jazeera"
-                        android:text="إلى الآية"
-                        android:textColor="@color/text_secondary_color"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <androidx.appcompat.widget.AppCompatTextView
-                        android:id="@+id/toAyaTextView"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:background="@drawable/value_background"
-                        android:fontFamily="@font/jazeera"
-                        android:gravity="center"
-                        android:padding="12dp"
-                        android:text="1"
-                        android:textColor="@color/text_primary_color"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -349,6 +449,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/jazeera"
+                    android:layout_gravity="center"
+                    android:gravity="center"
                     android:text="التكرار لكل آية"
                     android:textColor="@color/text_secondary_color"
                     android:textSize="14sp"
@@ -373,6 +475,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:fontFamily="@font/jazeera"
+                    android:layout_gravity="center"
+                    android:gravity="center"
                     android:text="تكرار السورة"
                     android:textColor="@color/text_secondary_color"
                     android:textSize="14sp"

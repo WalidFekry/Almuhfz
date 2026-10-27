@@ -38,6 +38,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.walid.almuhfz.bookmarks.BookmarksActivity;
 import com.walid.almuhfz.db.QuranDatabase;
 import com.walid.almuhfz.db.entity.AyahEntity;
 import com.walid.almuhfz.db.entity.ReciterEntity;
@@ -57,7 +58,11 @@ import com.walid.almuhfz.learning.models.SoraDetailsResponse;
 import com.walid.almuhfz.learning.networking.QuranUtils;
 import com.walid.almuhfz.learning.networking.RetrofitClient;
 import com.walid.almuhfz.notifications_messages.NotificationsMessagesActivity;
+import com.walid.almuhfz.reminder.ReminderManager;
+import com.walid.almuhfz.reminder.ReminderSettingsActivity;
+import com.walid.almuhfz.search.SearchActivity;
 import com.walid.almuhfz.utils.AppExecutors;
+import com.walid.almuhfz.utils.PreferencesManager;
 import com.walid.almuhfz.utils.ThemeManager;
 
 import java.text.NumberFormat;
@@ -317,6 +322,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Toast.makeText(this, "يرجى اختيار القارئ والسورة أولاً", Toast.LENGTH_SHORT).show();
             return;
         }
+
+        if (soraDetails.getName() == null || soraDetails.getName().trim().isEmpty()) {
+            List<Sora> defaultList = QuranUtils.getSoraList();
+            if (selectedSoraNumber > 0 && selectedSoraNumber <= defaultList.size()) {
+                soraDetails.setName(defaultList.get(selectedSoraNumber - 1).getName());
+            } else {
+                soraDetails.setName(soraTextView.getText().toString());
+            }
+        }
+
         Intent intent = new Intent(this, LearningActivity.class);
         LearningData data = new LearningData(selectedReciter, soraDetails, selectedSoraNumber, selectedFrom, selectedTo, repeatAya, repeatSora);
         intent.putExtra("learning_data", data);
@@ -332,6 +347,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         View cardTheme = findViewById(R.id.cardThemeSwitcher);
         if (cardTheme != null) {
             cardTheme.setOnClickListener(v -> showThemeSelectionDialog());
+        }
+
+        View cardBookmarks = findViewById(R.id.cardBookmarks);
+        if (cardBookmarks != null) {
+            cardBookmarks.setOnClickListener(v -> startActivity(new Intent(this, BookmarksActivity.class)));
+        }
+
+        View cardSearch = findViewById(R.id.cardSearch);
+        if (cardSearch != null) {
+            cardSearch.setOnClickListener(v -> startActivity(new Intent(this, SearchActivity.class)));
+        }
+
+        View cardReminder = findViewById(R.id.cardReminder);
+        if (cardReminder != null) {
+            cardReminder.setOnClickListener(v -> startActivity(new Intent(this, ReminderSettingsActivity.class)));
         }
 
         downloadButton.setOnClickListener(view -> handleDownloadButtonClick());
@@ -361,6 +391,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         downloadButton = findViewById(R.id.download_button);
         downloadProgressBar = findViewById(R.id.downloadProgressBar);
         downloadStatusText = findViewById(R.id.downloadStatusText);
+
+        selectedSoraNumber = PreferencesManager.getSavedSurahNum(this);
+        selectedFrom = PreferencesManager.getSavedFromAya(this);
+        selectedTo = PreferencesManager.getSavedToAya(this);
+        repeatAya = PreferencesManager.getSavedRepeatAya(this);
+        repeatSora = PreferencesManager.getSavedRepeatSora(this);
+
+        fromAyaTextView.setText(String.valueOf(selectedFrom));
+        toAyaTextView.setText(String.valueOf(selectedTo));
+        repeatAyaTextView.setText("عدد التكرار لكل آية = " + repeatAya);
+        repeatSoraTextView.setText("عدد تكرار السورة = " + repeatSora);
+    }
+
+    private Reciter findSavedReciter() {
+        if (reciterList == null || reciterList.isEmpty()) return null;
+        String savedId = PreferencesManager.getSavedReciterId(this);
+        for (int i = 0; i < reciterList.size(); i++) {
+            if (reciterList.get(i) != null && savedId.equalsIgnoreCase(reciterList.get(i).getIdentifier())) {
+                lastReciter = i;
+                return reciterList.get(i);
+            }
+        }
+        lastReciter = 0;
+        return reciterList.get(0);
     }
 
     private void getListOfReciters() {
@@ -389,7 +443,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     reciterList = filterRecitersByFormat(allReciters, "audio");
 
                     if (!reciterList.isEmpty()) {
-                        updateUIWithReciter(reciterList.get(0));
+                        updateUIWithReciter(findSavedReciter());
                         return;
                     }
                 }
@@ -423,7 +477,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     handleError("يبدو أن هناك مشكلة في الاتصال بالإنترنت. يرجى التحقق من اتصالك وحاول مرة أخرى.");
                 } else {
                     reciterList = downloadedReciters;
-                    updateUIWithReciter(reciterList.get(0));
+                    updateUIWithReciter(findSavedReciter());
                 }
             });
         });
@@ -507,6 +561,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (reciter == null) return;
         reciterTextView.setText(reciter.getName());
         selectedReciter = reciter;
+        PreferencesManager.saveSelectedReciter(this, reciter.getIdentifier(), reciter.getName());
         getSoraDetails();
     }
 
@@ -535,10 +590,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     soraTextView.setText(data.getName());
                     int ayahCount = (data.getAyahs() != null) ? data.getAyahs().size() : 0;
-                    toAyaTextView.setText(String.valueOf(ayahCount));
-                    selectedTo = ayahCount;
-                    selectedFrom = 1;
-                    fromAyaTextView.setText("1");
+                    if (selectedTo <= 0 || selectedTo > ayahCount) selectedTo = ayahCount;
+                    if (selectedFrom <= 0 || selectedFrom > selectedTo) selectedFrom = 1;
+
+                    fromAyaTextView.setText(String.valueOf(selectedFrom));
+                    toAyaTextView.setText(String.valueOf(selectedTo));
+                    PreferencesManager.saveSelections(MainActivity.this, selectedSoraNumber, selectedFrom, selectedTo, repeatAya, repeatSora);
 
                     hideLoading();
                     setViewsState(true, 1f);
@@ -590,13 +647,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     soraList.clear();
                     soraList.addAll(localSoraList);
 
+                    String soraName = "";
+                    List<Sora> defaultSoraList = QuranUtils.getSoraList();
+                    if (selectedSoraNumber > 0 && selectedSoraNumber <= defaultSoraList.size()) {
+                        soraName = defaultSoraList.get(selectedSoraNumber - 1).getName();
+                    } else if (!localSoraList.isEmpty()) {
+                        soraName = localSoraList.get(0).getName();
+                    }
+
+                    soraTextView.setText(soraName);
+
                     int ayahCount = selectedAyasList.size();
-                    toAyaTextView.setText(String.valueOf(ayahCount));
-                    selectedTo = ayahCount;
-                    selectedFrom = 1;
-                    fromAyaTextView.setText("1");
+                    if (selectedTo <= 0 || selectedTo > ayahCount) selectedTo = ayahCount;
+                    if (selectedFrom <= 0 || selectedFrom > selectedTo) selectedFrom = 1;
+
+                    fromAyaTextView.setText(String.valueOf(selectedFrom));
+                    toAyaTextView.setText(String.valueOf(selectedTo));
+                    PreferencesManager.saveSelections(MainActivity.this, selectedSoraNumber, selectedFrom, selectedTo, repeatAya, repeatSora);
+
                     soraDetails = new SoraDetails();
                     soraDetails.setNumber(selectedSoraNumber);
+                    soraDetails.setName(soraName);
                     soraDetails.setAyahs(selectedAyasList);
                     if (englishName == null && !soraList.isEmpty()) {
                         soraDetails.setEnglishName(soraList.get(0).getEnglishName());
@@ -635,6 +706,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 selectedReciter = reciterList.get(n);
                 reciterTextView.setText(selectedReciter.getName());
                 lastReciter = n;
+                PreferencesManager.saveSelectedReciter(this, selectedReciter.getIdentifier(), selectedReciter.getName());
                 getSoraDetails();
             }
             d.dismiss();
@@ -661,6 +733,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 soraTextView.setText(name);
                 selectedSoraNumber = n + 1;
                 englishName = soraList.get(n).getEnglishName();
+                PreferencesManager.saveSelections(this, selectedSoraNumber, selectedFrom, selectedTo, repeatAya, repeatSora);
                 getSoraDetails();
             }
             d.dismiss();
@@ -692,6 +765,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (selectedTo >= newFrom) {
                 selectedFrom = newFrom;
                 fromAyaTextView.setText(String.valueOf(selectedFrom));
+                PreferencesManager.saveSelections(this, selectedSoraNumber, selectedFrom, selectedTo, repeatAya, repeatSora);
             } else {
                 Toast.makeText(this, "يجب أن تكون الآية النهائية بعد الآية الابتدائية", Toast.LENGTH_LONG).show();
             }
@@ -724,6 +798,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (newTo >= selectedFrom) {
                 selectedTo = newTo;
                 toAyaTextView.setText(String.valueOf(selectedTo));
+                PreferencesManager.saveSelections(this, selectedSoraNumber, selectedFrom, selectedTo, repeatAya, repeatSora);
             } else {
                 Toast.makeText(this, "يجب أن تكون الآية النهائية بعد الآية الابتدائية", Toast.LENGTH_LONG).show();
             }
@@ -758,6 +833,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 } else {
                     repeatAya = value;
                     repeatAyaTextView.setText("عدد التكرار لكل آية = " + repeatAya);
+                    PreferencesManager.saveSelections(this, selectedSoraNumber, selectedFrom, selectedTo, repeatAya, repeatSora);
                 }
             } catch (NumberFormatException e) {
                 Toast.makeText(this, "برجاء أدخال رقم صالح", Toast.LENGTH_SHORT).show();
@@ -791,7 +867,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Toast.makeText(this, "برجاء إدخال عدد تكرار بين 1 و 100", Toast.LENGTH_SHORT).show();
                 } else {
                     repeatSora = value;
-                    repeatSoraTextView.setText("عدد التكرار = " + repeatSora);
+                    repeatSoraTextView.setText("عدد تكرار السورة = " + repeatSora);
+                    PreferencesManager.saveSelections(this, selectedSoraNumber, selectedFrom, selectedTo, repeatAya, repeatSora);
                 }
             } catch (NumberFormatException e) {
                 Toast.makeText(this, "برجاء أدخال رقم صالح", Toast.LENGTH_SHORT).show();
@@ -823,7 +900,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.maktbtiplus) {
+        if (id == R.id.nav_reminder) {
+            startActivity(new Intent(this, ReminderSettingsActivity.class));
+        } else if (id == R.id.maktbtiplus) {
             Intent o = new Intent(Intent.ACTION_VIEW);
             o.setData(Uri.parse("https://walid-fekry.com/maktbti-plus/"));
             startActivity(o);

@@ -1,6 +1,7 @@
 package com.walid.almuhfz.learning.networking;
 
 import com.walid.almuhfz.learning.models.ReciterResponse;
+import com.walid.almuhfz.learning.models.SearchResponse;
 import com.walid.almuhfz.learning.models.SoraDetailsResponse;
 
 import okhttp3.ResponseBody;
@@ -19,6 +20,9 @@ public interface Api {
     @GET("v1/surah/{soraId}/{identifier}")
     Call<SoraDetailsResponse> getSoraDetails(@Path(value = "soraId", encoded = true) Integer soraId,
                                              @Path(value = "identifier", encoded = true) String identifier);
+
+    @GET("v1/search/{keyword}/all/ar")
+    Call<SearchResponse> searchQuran(@Path(value = "keyword", encoded = true) String keyword);
 
     @GET
     @Streaming

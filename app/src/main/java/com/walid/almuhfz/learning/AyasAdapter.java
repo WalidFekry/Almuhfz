@@ -2,6 +2,7 @@ package com.walid.almuhfz.learning;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,10 +24,16 @@ public class AyasAdapter extends RecyclerView.Adapter<AyasAdapter.Holder> {
     private int selectedAyaIndex = RecyclerView.NO_POSITION;
     private final List<Ayah> ayahList;
     private final Interaction interaction;
+    private float fontSizeSp = 22f;
 
     public AyasAdapter(List<Ayah> ayahList, Interaction interaction) {
         this.ayahList = ayahList;
         this.interaction = interaction;
+    }
+
+    public void setFontSizeSp(float fontSizeSp) {
+        this.fontSizeSp = fontSizeSp;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -48,6 +55,7 @@ public class AyasAdapter extends RecyclerView.Adapter<AyasAdapter.Holder> {
         Ayah currentAyah = ayahList.get(adapterPosition);
         String ayahText = (currentAyah != null && currentAyah.getText() != null) ? currentAyah.getText() : "";
         holder.ayaTextView.setText(nf.format(position + 1) + " - " + ayahText);
+        holder.ayaTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSizeSp);
 
         Context context = holder.ayaTextView.getContext();
         boolean isSelected = (selectedAyaIndex != RecyclerView.NO_POSITION && selectedAyaIndex == adapterPosition);

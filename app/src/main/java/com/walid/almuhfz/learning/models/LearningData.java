@@ -14,6 +14,7 @@ public class LearningData implements Serializable {
     private int selectedTo = 1;
     private int repeatAya = 0;
     private int repeatSora = 0;
+    private int initialPlayIndex = 0;
 
     public LearningData(Reciter selectedReciter, SoraDetails soraDetails, int selectedSoraNumber, int selectedFrom, int selectedTo, int repeatAya, int repeatSora) {
         this.selectedReciter = selectedReciter;
@@ -82,5 +83,13 @@ public class LearningData implements Serializable {
 
     public void setRepeatSora(int repeatSora) {
         this.repeatSora = repeatSora;
+    }
+
+    public int getInitialPlayIndex() {
+        return initialPlayIndex;
+    }
+
+    public void setInitialPlayIndex(int initialPlayIndex) {
+        this.initialPlayIndex = initialPlayIndex;
     }
 }
