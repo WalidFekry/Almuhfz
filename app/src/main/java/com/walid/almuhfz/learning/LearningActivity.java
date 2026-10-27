@@ -378,7 +378,7 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
     }
 
     private void showFontSizeDialog() {
-        CharSequence[] options = new CharSequence[]{"نوع خط القراءة 🔤", "حجم الخط القرآني 📏"};
+        CharSequence[] options = new CharSequence[]{"نوع خط القراءة", "حجم الخط القرآني"};
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("تنسيق الخط والقراءة 📖");
@@ -415,7 +415,7 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
     }
 
     private void showFontSizeSelectionDialog() {
-        CharSequence[] sizes = new CharSequence[]{"صغير (18 sp)", "متوسط (22 sp)", "كبير (26 sp)", "كبير جداً (30 sp)"};
+        CharSequence[] sizes = new CharSequence[]{"صغير", "متوسط", "كبير", "كبير جدا"};
         int selected = (currentFontSizeSp <= 18f) ? 0 : (currentFontSizeSp <= 22f) ? 1 : (currentFontSizeSp <= 26f) ? 2 : 3;
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
