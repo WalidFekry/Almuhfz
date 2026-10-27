@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,7 +19,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.walid.almuhfz.R;
+import com.walid.almuhfz.db.QuranDatabase;
+import com.walid.almuhfz.notifications_messages.db.SavedNotificationEntity;
 import com.walid.almuhfz.notifications_messages.model.NotificationModel;
+import com.walid.almuhfz.notifications_messages.utils.QuoteImageGenerator;
+import com.walid.almuhfz.utils.AppExecutors;
 
 import net.steamcrafted.materialiconlib.MaterialIconView;
 
@@ -59,13 +64,61 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 timeText = parts[0];
             }
         }
-        holder.messageTime.setText(timeText);
+        final String finalTimeText = timeText;
+
+        holder.messageTime.setText(finalTimeText);
+
+        checkBookmarkStatus(holder, itemContext, notification.getId());
+
+        setClickListener(holder.btnDownloadImage, v -> QuoteImageGenerator.saveQuoteImageToGallery(itemContext, rawTitle, notification.getId(), finalTimeText));
+        setClickListener(holder.btnShareImage, v -> QuoteImageGenerator.shareQuoteImage(itemContext, rawTitle, notification.getId(), finalTimeText));
+        setClickListener(holder.btnBookmarkMessage, v -> toggleSaveNotification(holder, itemContext, notification, finalTimeText));
 
         setClickListener(holder.shareButton, v -> shareNotification(itemContext, notification));
         setClickListener(holder.starButton, v -> openLink(itemContext, "https://play.google.com/store/apps/details?id=com.walid.almuhfz"));
         setClickListener(holder.whatsappButton, v -> shareOnWhatsApp(itemContext, rawTitle));
         setClickListener(holder.copyButton, v -> copyToClipboard(itemContext, rawTitle));
         setClickListener(holder.facebookButton, v -> shareOnFacebook(itemContext, rawTitle));
+    }
+
+    private void checkBookmarkStatus(NotificationViewHolder holder, Context context, int notificationId) {
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            SavedNotificationEntity saved = QuranDatabase.getInstance(context.getApplicationContext()).quranDao().getSavedNotificationById(notificationId);
+            AppExecutors.getInstance().mainThread().execute(() -> {
+                if (holder.btnBookmarkMessage != null) {
+                    if (saved != null) {
+                        holder.btnBookmarkMessage.setText("محفوظ 🔖");
+                    } else {
+                        holder.btnBookmarkMessage.setText("حفظ 🔖");
+                    }
+                }
+            });
+        });
+    }
+
+    private void toggleSaveNotification(NotificationViewHolder holder, Context context, NotificationModel notification, String dateText) {
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            SavedNotificationEntity existing = QuranDatabase.getInstance(context.getApplicationContext()).quranDao().getSavedNotificationById(notification.getId());
+            if (existing != null) {
+                QuranDatabase.getInstance(context.getApplicationContext()).quranDao().deleteSavedNotification(notification.getId());
+                AppExecutors.getInstance().mainThread().execute(() -> {
+                    if (holder.btnBookmarkMessage != null) holder.btnBookmarkMessage.setText("حفظ 🔖");
+                    Toast.makeText(context, "تم إزالة الرسالة من المحفوظات", Toast.LENGTH_SHORT).show();
+                });
+            } else {
+                SavedNotificationEntity entity = new SavedNotificationEntity(
+                        notification.getId(),
+                        notification.getTitle(),
+                        dateText,
+                        System.currentTimeMillis()
+                );
+                QuranDatabase.getInstance(context.getApplicationContext()).quranDao().insertSavedNotification(entity);
+                AppExecutors.getInstance().mainThread().execute(() -> {
+                    if (holder.btnBookmarkMessage != null) holder.btnBookmarkMessage.setText("محفوظ 🔖");
+                    Toast.makeText(context, "تم حفظ الرسالة بنجاح 🔖", Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
     }
 
     private void setClickListener(View view, View.OnClickListener listener) {
@@ -140,6 +193,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         TextView title;
         LottieAnimationView starButton, shareButton;
         AppCompatTextView messageNumber, messageTime;
+        Button btnDownloadImage, btnShareImage, btnBookmarkMessage;
 
         public NotificationViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -151,6 +205,10 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             messageNumber = itemView.findViewById(R.id.message_number);
             messageTime = itemView.findViewById(R.id.message_time);
             facebookButton = itemView.findViewById(R.id.facebook_share);
+
+            btnDownloadImage = itemView.findViewById(R.id.btnDownloadImage);
+            btnShareImage = itemView.findViewById(R.id.btnShareImage);
+            btnBookmarkMessage = itemView.findViewById(R.id.btnBookmarkMessage);
         }
     }
 }

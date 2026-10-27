@@ -86,8 +86,8 @@
             <!-- Animation view -->
             <com.airbnb.lottie.LottieAnimationView
                 android:id="@+id/animation_view"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/messageInfo"
@@ -112,72 +112,126 @@
                 app:layout_constraintTop_toBottomOf="@id/animation_view"
                 tools:text="نص الاقتباس أو الرسالة التحفيزية" />
 
+            <!-- Image Generation Actions Bar -->
+            <LinearLayout
+                android:id="@+id/imageActionsBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:orientation="horizontal"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/title">
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnDownloadImage"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_marginEnd="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/value_background"
+                    android:fontFamily="@font/jazeera"
+                    android:paddingHorizontal="6dp"
+                    android:text="حفظ صورة 🖼️"
+                    android:textColor="@color/text_primary_color"
+                    android:textSize="12sp" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnShareImage"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_marginHorizontal="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/value_background"
+                    android:backgroundTint="@color/primary_color"
+                    android:fontFamily="@font/jazeera"
+                    android:paddingHorizontal="6dp"
+                    android:text="مشاركة صورة 🖼️"
+                    android:textColor="@color/text_on_primary"
+                    android:textSize="12sp" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnBookmarkMessage"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/value_background"
+                    android:fontFamily="@font/jazeera"
+                    android:paddingHorizontal="6dp"
+                    android:text="حفظ 🔖"
+                    android:textColor="@color/text_primary_color"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
             <!-- Divider line -->
             <View
                 android:id="@+id/divider"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="10dp"
                 android:background="@color/card_stroke_color"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/title" />
+                app:layout_constraintTop_toBottomOf="@id/imageActionsBar" />
 
-            <!-- Action buttons -->
+            <!-- Text Share Action buttons -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="horizontal"
-                android:paddingTop="8dp"
+                android:paddingTop="6dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/divider">
 
                 <com.airbnb.lottie.LottieAnimationView
                     android:id="@+id/starquran"
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
-                    android:layout_margin="8dp"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:layout_margin="6dp"
                     app:lottie_autoPlay="true"
                     app:lottie_fileName="favorite.json"
                     app:lottie_loop="false" />
 
                 <com.airbnb.lottie.LottieAnimationView
                     android:id="@+id/sharequran"
-                    android:layout_width="38dp"
-                    android:layout_height="38dp"
-                    android:layout_margin="8dp"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:layout_margin="6dp"
                     app:lottie_autoPlay="true"
                     app:lottie_fileName="share.json"
                     app:lottie_loop="false" />
 
                 <net.steamcrafted.materialiconlib.MaterialIconView
                     android:id="@+id/copyquran"
-                    android:layout_width="34dp"
-                    android:layout_height="34dp"
-                    android:layout_margin="8dp"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_margin="6dp"
                     app:materialIcon="content_copy"
                     app:materialIconColor="@color/accent_gold"
-                    app:materialIconSize="34dp" />
+                    app:materialIconSize="32dp" />
 
                 <net.steamcrafted.materialiconlib.MaterialIconView
                     android:id="@+id/qumsgwhats"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:layout_margin="8dp"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:layout_margin="6dp"
                     app:materialIcon="whatsapp"
                     app:materialIconColor="#55CD6C"
-                    app:materialIconSize="36dp" />
+                    app:materialIconSize="34dp" />
 
                 <net.steamcrafted.materialiconlib.MaterialIconView
                     android:id="@+id/facebook_share"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:layout_margin="8dp"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:layout_margin="6dp"
                     app:materialIcon="facebook_box"
                     app:materialIconColor="#0866FF"
-                    app:materialIconSize="36dp" />
+                    app:materialIconSize="34dp" />
 
             </LinearLayout>
 

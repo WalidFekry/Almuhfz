@@ -10,8 +10,15 @@ import com.walid.almuhfz.db.entity.AyahEntity;
 import com.walid.almuhfz.db.entity.BookmarkEntity;
 import com.walid.almuhfz.db.entity.ReciterEntity;
 import com.walid.almuhfz.db.entity.SurahEntity;
+import com.walid.almuhfz.notifications_messages.db.SavedNotificationEntity;
 
-@Database(entities = {AyahEntity.class, SurahEntity.class, ReciterEntity.class, BookmarkEntity.class}, version = 1, exportSchema = false)
+@Database(entities = {
+        AyahEntity.class,
+        SurahEntity.class,
+        ReciterEntity.class,
+        BookmarkEntity.class,
+        SavedNotificationEntity.class
+}, version = 1, exportSchema = false)
 public abstract class QuranDatabase extends RoomDatabase {
     private static volatile QuranDatabase INSTANCE;
 

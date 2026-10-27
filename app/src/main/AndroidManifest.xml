@@ -62,6 +62,20 @@
         <activity
             android:name=".reminder.ReminderSettingsActivity"
             android:exported="false" />
+        <activity
+            android:name=".notifications_messages.SavedNotificationsActivity"
+            android:exported="false" />
+
+        <!-- FileProvider for Sharing Images -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
         <!-- Firebase Messaging Service -->
         <service

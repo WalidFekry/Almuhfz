@@ -4,7 +4,9 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.view.animation.AnimationUtils;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatImageButton;
@@ -13,10 +15,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.walid.almuhfz.NoInternetActivity;
 import com.walid.almuhfz.R;
+import com.walid.almuhfz.db.QuranDatabase;
 import com.walid.almuhfz.notifications_messages.adapter.NotificationAdapter;
+import com.walid.almuhfz.notifications_messages.db.SavedNotificationEntity;
 import com.walid.almuhfz.notifications_messages.model.NotificationModel;
 import com.walid.almuhfz.notifications_messages.model.NotificationResponse;
 import com.walid.almuhfz.notifications_messages.repository.NotificationRepository;
+import com.walid.almuhfz.utils.AppExecutors;
+import com.walid.almuhfz.utils.ThemeManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +37,7 @@ public class NotificationsMessagesActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeManager.applySavedTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notifications_messages);
         initViews();
@@ -79,6 +86,11 @@ public class NotificationsMessagesActivity extends AppCompatActivity {
         AppCompatImageButton back = findViewById(R.id.back_button);
         rec = findViewById(R.id.rec);
         back.setOnClickListener(v -> finish());
+
+        View btnSavedMessages = findViewById(R.id.btnSavedMessages);
+        if (btnSavedMessages != null) {
+            btnSavedMessages.setOnClickListener(v -> startActivity(new Intent(this, SavedNotificationsActivity.class)));
+        }
     }
 
     private void setupRecyclerView() {
@@ -108,8 +120,33 @@ public class NotificationsMessagesActivity extends AppCompatActivity {
 
                 hideLoading();
                 Log.e(TAG, "Error: " + errorMessage);
-                openNoInternet();
+                loadSavedNotificationsFallback();
             }
+        });
+    }
+
+    private void loadSavedNotificationsFallback() {
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            List<SavedNotificationEntity> entities = QuranDatabase.getInstance(getApplicationContext()).quranDao().getAllSavedNotifications();
+            List<NotificationModel> fallbackModels = new ArrayList<>();
+            if (entities != null) {
+                for (SavedNotificationEntity entity : entities) {
+                    if (entity != null) {
+                        fallbackModels.add(new NotificationModel(entity.getId(), entity.getTitle(), entity.getCreatedAt()));
+                    }
+                }
+            }
+
+            AppExecutors.getInstance().mainThread().execute(() -> {
+                if (isFinishing() || isDestroyed()) return;
+
+                if (!fallbackModels.isEmpty()) {
+                    updateRecyclerView(fallbackModels);
+                    Toast.makeText(this, "تم عرض الرسائل المحفوظة (وضع الأوفلاين) 🔖", Toast.LENGTH_LONG).show();
+                } else {
+                    openNoInternet();
+                }
+            });
         });
     }
 
@@ -122,10 +159,8 @@ public class NotificationsMessagesActivity extends AppCompatActivity {
     private void updateRecyclerView(List<NotificationModel> notifications) {
         if (isFinishing() || isDestroyed()) return;
 
-        if (adapter == null) {
-            adapter = new NotificationAdapter(notifications);
-            rec.setAdapter(adapter);
-        }
+        adapter = new NotificationAdapter(notifications);
+        rec.setAdapter(adapter);
         hideLoading();
     }
 

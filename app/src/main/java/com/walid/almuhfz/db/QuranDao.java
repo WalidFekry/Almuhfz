@@ -9,6 +9,7 @@ import com.walid.almuhfz.db.entity.AyahEntity;
 import com.walid.almuhfz.db.entity.BookmarkEntity;
 import com.walid.almuhfz.db.entity.ReciterEntity;
 import com.walid.almuhfz.db.entity.SurahEntity;
+import com.walid.almuhfz.notifications_messages.db.SavedNotificationEntity;
 
 import java.util.List;
 
@@ -70,4 +71,17 @@ public interface QuranDao {
 
     @Query("SELECT * FROM ayahs ORDER BY numberInSurah")
     List<AyahEntity> getAllAyahsForSearch();
+
+    // --- SAVED NOTIFICATIONS / MESSAGES ---
+    @Query("SELECT * FROM saved_notifications ORDER BY savedTimestamp DESC")
+    List<SavedNotificationEntity> getAllSavedNotifications();
+
+    @Query("SELECT * FROM saved_notifications WHERE id = :id LIMIT 1")
+    SavedNotificationEntity getSavedNotificationById(int id);
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertSavedNotification(SavedNotificationEntity notification);
+
+    @Query("DELETE FROM saved_notifications WHERE id = :id")
+    void deleteSavedNotification(int id);
 }
