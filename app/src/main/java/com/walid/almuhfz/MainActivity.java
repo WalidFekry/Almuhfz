@@ -521,24 +521,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void hideLoading() {
-        if (isFinishing() || isDestroyed()) {
-            if (loadingDialog != null) {
-                try {
-                    loadingDialog.dismiss();
-                } catch (Exception ignored) {
-                }
-                loadingDialog = null;
-            }
-            return;
-        }
-
-        if (loadingDialog != null && loadingDialog.isShowing()) {
-            try {
+        try {
+            if (loadingDialog != null && loadingDialog.isShowing()) {
                 loadingDialog.dismiss();
-            } catch (Exception e) {
-                Log.e(TAG, "Error dismissing dialog", e);
             }
+        } catch (Exception e) {
+            Log.e(TAG, "Error dismissing dialog", e);
+        } finally {
             loadingDialog = null;
+        }
+    }
+
+    public static int parseArabicInt(String text, int defaultValue) {
+        if (text == null || text.trim().isEmpty()) return defaultValue;
+        String normalized = text.replace("٠", "0").replace("١", "1").replace("٢", "2")
+                .replace("٣", "3").replace("٤", "4").replace("٥", "5")
+                .replace("٦", "6").replace("٧", "7").replace("٨", "8")
+                .replace("٩", "9").trim();
+        try {
+            return Integer.parseInt(normalized);
+        } catch (NumberFormatException e) {
+            return defaultValue;
         }
     }
 
@@ -853,17 +856,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Toast.makeText(this, "برجاء أدخال رقم صالح", Toast.LENGTH_SHORT).show();
                 return;
             }
-            try {
-                int value = Integer.parseInt(textValue);
-                if (value <= 0 || value > 100) {
-                    Toast.makeText(this, "برجاء إدخال عدد تكرار بين 1 و 100", Toast.LENGTH_SHORT).show();
-                } else {
-                    repeatAya = value;
-                    repeatAyaTextView.setText("عدد التكرار لكل آية = " + repeatAya);
-                    PreferencesManager.saveSelections(this, selectedSoraNumber, selectedFrom, selectedTo, repeatAya, repeatSora);
-                }
-            } catch (NumberFormatException e) {
-                Toast.makeText(this, "برجاء أدخال رقم صالح", Toast.LENGTH_SHORT).show();
+            int value = parseArabicInt(textValue, -1);
+            if (value <= 0 || value > 100) {
+                Toast.makeText(this, "برجاء إدخال عدد تكرار بين 1 و 100", Toast.LENGTH_SHORT).show();
+            } else {
+                repeatAya = value;
+                repeatAyaTextView.setText("عدد التكرار لكل آية = " + repeatAya);
+                PreferencesManager.saveSelections(this, selectedSoraNumber, selectedFrom, selectedTo, repeatAya, repeatSora);
             }
         });
 
@@ -888,17 +887,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Toast.makeText(this, "برجاء أدخال رقم صالح", Toast.LENGTH_SHORT).show();
                 return;
             }
-            try {
-                int value = Integer.parseInt(textValue);
-                if (value <= 0 || value > 100) {
-                    Toast.makeText(this, "برجاء إدخال عدد تكرار بين 1 و 100", Toast.LENGTH_SHORT).show();
-                } else {
-                    repeatSora = value;
-                    repeatSoraTextView.setText("عدد تكرار السورة = " + repeatSora);
-                    PreferencesManager.saveSelections(this, selectedSoraNumber, selectedFrom, selectedTo, repeatAya, repeatSora);
-                }
-            } catch (NumberFormatException e) {
-                Toast.makeText(this, "برجاء أدخال رقم صالح", Toast.LENGTH_SHORT).show();
+            int value = parseArabicInt(textValue, -1);
+            if (value <= 0 || value > 100) {
+                Toast.makeText(this, "برجاء إدخال عدد تكرار بين 1 و 100", Toast.LENGTH_SHORT).show();
+            } else {
+                repeatSora = value;
+                repeatSoraTextView.setText("عدد تكرار السورة = " + repeatSora);
+                PreferencesManager.saveSelections(this, selectedSoraNumber, selectedFrom, selectedTo, repeatAya, repeatSora);
             }
         });
 
