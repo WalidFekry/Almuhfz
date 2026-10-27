@@ -3,7 +3,6 @@
     <string name="navigation_drawer_open">افتح قائمة التنقل</string>
     <string name="navigation_drawer_close">أغلق قائمة التنقل</string>
     <string name="header">المُحفظ للقرآن - المصحف المعلم</string>
-    <string name="aboutapp">المٌحفظ للقرآن - المصحف المعلم 🌸</string>
     <string name="login">يبدو أن اتصالك بالإنترنت غير متوفر حاليًا 😥. من فضلك تأكد من تفعيل شبكة الواي فاي أو بيانات الهاتف، ثم أعد فتح التطبيق مرة أخرى للاستمتاع بكامل الميزات 🌸.</string>
     <string name="loading_title">جاري التحميل الآن .. برجاء الانتظار !</string>
     <string name="try_again">اعادة المحاولة 🤔</string>

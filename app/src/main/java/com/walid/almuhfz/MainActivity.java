@@ -937,12 +937,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else if (id == R.id.ratee) {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.walid.almuhfz")));
         } else if (id == R.id.shareee) {
-            Intent sendIntent = new Intent();
-            sendIntent.setAction(Intent.ACTION_SEND);
-            sendIntent.putExtra(Intent.EXTRA_SUBJECT, "المٌحفظ للقرآن - المصحف المعلم 💙");
-            sendIntent.putExtra(Intent.EXTRA_TEXT, getResources().getString(R.string.aboutapp) + "\n\nحمل التطبيق من خلال هذا الرابط أو من متجر جوجل بلاي 👇  https://play.google.com/store/apps/details?id=com.walid.almuhfz\n");
-            sendIntent.setType("text/plain");
-            startActivity(sendIntent);
+            shareAppWithFriends();
         } else if (id == R.id.mass) {
             Intent emailIntent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts("mailto", "prowalidfekry@gmail.com", null));
             emailIntent.putExtra(Intent.EXTRA_SUBJECT, "رسالة إلى مبرمج تطبيق المٌحفظ 📲");
