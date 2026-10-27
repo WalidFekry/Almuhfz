@@ -117,9 +117,6 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
 
         AppExecutors.getInstance().diskIO().execute(() -> {
             List<AyahEntity> roomData = QuranDatabase.getInstance(getApplicationContext()).quranDao().getAyahsBySurahAndReciter(surahNumber, reciterId);
-            if (roomData == null || roomData.isEmpty()) {
-                roomData = QuranDatabase.getInstance(getApplicationContext()).quranDao().getAyahsBySurah(surahNumber);
-            }
 
             List<Ayah> selectedAyasList = new ArrayList<>();
 
@@ -467,10 +464,9 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
         }
 
         Ayah ayah = ayahs.get(index);
-        String audioUrl = ayah.getAudio();
 
         String reciterId = (learningData.getSelectedReciter() != null && learningData.getSelectedReciter().getIdentifier() != null)
-                ? learningData.getSelectedReciter().getIdentifier() : "";
+                ? learningData.getSelectedReciter().getIdentifier() : "ar.alafasy";
         String englishName = (learningData.getSoraDetails().getEnglishName() != null)
                 ? learningData.getSoraDetails().getEnglishName() : "surah";
 
@@ -481,10 +477,19 @@ public class LearningActivity extends AppCompatActivity implements AyasAdapter.I
 
         if (DownloadManager.isAudioFileValid(localFile)) {
             return JcAudio.createFromFilePath(title, localFile.getAbsolutePath());
-        } else if (audioUrl != null && !audioUrl.isEmpty()) {
+        }
+
+        String audioUrl = ayah.getAudio();
+        if (audioUrl == null || audioUrl.trim().isEmpty() || !audioUrl.contains(reciterId)) {
+            if (ayah.getNumber() != null && ayah.getNumber() > 0) {
+                audioUrl = "https://cdn.islamic.network/quran/audio/128/" + reciterId + "/" + ayah.getNumber() + ".mp3";
+            }
+        }
+
+        if (audioUrl != null && !audioUrl.isEmpty()) {
             return JcAudio.createFromURL(title, audioUrl);
         } else {
-            showMessage("الملف الصوتي أوفلاين غير متاح أو تالف. يرجى الاتصال بالإنترنت.");
+            showMessage("الملف الصوتي غير متاح حالياً. يرجى التأكد من الاتصال بالإنترنت.");
             return null;
         }
     }

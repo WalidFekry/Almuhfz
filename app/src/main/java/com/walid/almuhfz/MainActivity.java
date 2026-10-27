@@ -58,7 +58,6 @@ import com.walid.almuhfz.learning.models.SoraDetailsResponse;
 import com.walid.almuhfz.learning.networking.QuranUtils;
 import com.walid.almuhfz.learning.networking.RetrofitClient;
 import com.walid.almuhfz.notifications_messages.NotificationsMessagesActivity;
-import com.walid.almuhfz.reminder.ReminderManager;
 import com.walid.almuhfz.reminder.ReminderSettingsActivity;
 import com.walid.almuhfz.search.SearchActivity;
 import com.walid.almuhfz.utils.AppExecutors;
@@ -464,7 +463,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 List<Reciter> allReciters = response.body().getData();
                 if (allReciters != null) {
-                    reciterList = filterRecitersByFormat(allReciters, "audio");
+                    reciterList = filterRecitersByFormat(allReciters);
 
                     if (!reciterList.isEmpty()) {
                         updateUIWithReciter(findSavedReciter());
@@ -562,13 +561,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    private List<Reciter> filterRecitersByFormat(List<Reciter> reciters, String format) {
+    private List<Reciter> filterRecitersByFormat(List<Reciter> reciters) {
         List<Reciter> filteredList = new ArrayList<>();
         if (reciters == null) return filteredList;
 
         for (Reciter reciter : reciters) {
-            if (reciter != null && format.equalsIgnoreCase(reciter.getFormat())) {
-                filteredList.add(reciter);
+            if (reciter != null) {
+                boolean matchFormat = "audio".equalsIgnoreCase(reciter.getFormat());
+                boolean matchType = "versebyverse".equalsIgnoreCase(reciter.getType());
+                if (matchFormat && matchType) {
+                    filteredList.add(reciter);
+                }
             }
         }
         return filteredList;
