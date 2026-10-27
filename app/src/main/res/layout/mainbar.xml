@@ -17,12 +17,13 @@
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:fitsSystemWindows="true"
-        app:itemTextColor="@color/black"
-        android:background="#DBD6D6"
-        app:headerLayout="@layout/nav_header_main"
-        app:drawerShape="roundedRect"
         android:layout_gravity="start"
-        app:menu="@menu/activity_main_drawer"/>
+        android:background="@color/surface_card"
+        android:fitsSystemWindows="true"
+        app:drawerShape="roundedRect"
+        app:headerLayout="@layout/nav_header_main"
+        app:itemIconTint="@color/primary_color"
+        app:itemTextColor="@color/text_primary_color"
+        app:menu="@menu/activity_main_drawer" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

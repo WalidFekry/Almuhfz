@@ -25,6 +25,7 @@
             style="@style/TextAppearance.AllTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="@color/accent_gold"
             android:layout_marginStart="10dp"
             android:fontFamily="@font/jazeera"
             android:text="@string/loading_title" />
