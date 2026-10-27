@@ -67,24 +67,6 @@
 
 ---
 
-## 🛠️ البنية البرمجية والتقنيات (Architecture & Tech Stack)
-
-| المكون | التقنية المستعملة |
-| :--- | :--- |
-| **لغة البرمجة** | Java (JDK 17) |
-| **واجهات المستخدم** | Android Native XML (Material Components M3) |
-| **إدارة قاعدة البيانات** | Room Database v2 (`QuranDatabase` & `QuranDao`) |
-| **الشبكات والتواصل** | Retrofit 3.0 + OkHttp 5.5 + Gson |
-| **إدارة المهام والخلفية** | `AppExecutors` & `WorkManager` 2.12.0 (`ReminderWorker`) |
-| **شاشة البداية** | AndroidX Core SplashScreen API (`androidx.core:core-splashscreen`) |
-| **مشغل الصوتيات** | `JcPlayer` & Android MediaPlayer |
-| **الأنيميشن والتفاعل** | Lottie Animation (`com.airbnb.android:lottie`) |
-| **الإشعارات السحابية** | Firebase Cloud Messaging (FCM) |
-| **الحد الأدنى للنظام** | `minSdkVersion = 24` (Android 7.0 Nougat) |
-| **الهدف والتجميع** | `targetSdkVersion = 37` / `compileSdk = 37` |
-
----
-
 ## 📱 الشاشات الرئيسية للتطبيق (App Screenshots Structure)
 
 - **الواجهة الرئيسية (`MainActivity`)**: اختيار القارئ، السورة، نطاق الآيات، خيارات التكرار، والبطاقات السريعة.
@@ -108,8 +90,7 @@
 
 **وليد فكري (Walid Fekry)**
 - **الموقع الشخصي**: [https://walid-fekry.com](https://walid-fekry.com)
-- **البريد الإلكتروني**: `prowalidfekry@gmail.com`
-
+- **البريد الإلكتروني**: `walid_fekry@hotmail.com`
 ---
 
 <p align="center">
