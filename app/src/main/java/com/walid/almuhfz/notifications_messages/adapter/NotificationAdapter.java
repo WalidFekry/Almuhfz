@@ -127,12 +127,17 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         }
     }
 
+    private String buildSharedText(String text) {
+        String cleanText = (text != null) ? text.replace("_", "\n").trim() : "";
+        return cleanText + "\n\n🌸 من تطبيق المُحفظ للقرآن الكريم 👇\nhttps://play.google.com/store/apps/details?id=com.walid.almuhfz";
+    }
+
     private void shareOnFacebook(Context context, String text) {
         if (context == null) return;
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
         intent.setPackage("com.facebook.katana");
-        intent.putExtra(Intent.EXTRA_TEXT, text + "\n" + "تم نسخ هذا النص من تطبيق المُحفظ ^_^");
+        intent.putExtra(Intent.EXTRA_TEXT, buildSharedText(text));
         try {
             context.startActivity(intent);
         } catch (ActivityNotFoundException e) {
@@ -145,10 +150,9 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         String rawTitle = (notification.getTitle() != null) ? notification.getTitle() : "";
         Intent sendIntent = new Intent(Intent.ACTION_SEND);
         sendIntent.setType("text/plain");
-        sendIntent.putExtra(Intent.EXTRA_SUBJECT, "تطبيق (المُحفظ)");
-        sendIntent.putExtra(Intent.EXTRA_TEXT, rawTitle + "\n" +
-                "تم النسخ من تطبيق المٌحقظ 💙 👇 https://play.google.com/store/apps/details?id=com.walid.almuhfz \n");
-        context.startActivity(Intent.createChooser(sendIntent, "مشاركة نصوص من تطبيق المُحفظ:"));
+        sendIntent.putExtra(Intent.EXTRA_SUBJECT, "تطبيق المُحفظ للقرآن الكريم 🌸");
+        sendIntent.putExtra(Intent.EXTRA_TEXT, buildSharedText(rawTitle));
+        context.startActivity(Intent.createChooser(sendIntent, "مشاركة الاقتباس عبر..."));
     }
 
     private void openLink(Context context, String url) {
@@ -164,8 +168,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         Intent whatsappIntent = new Intent(Intent.ACTION_SEND);
         whatsappIntent.setType("text/plain");
         whatsappIntent.setPackage("com.whatsapp");
-        whatsappIntent.putExtra(Intent.EXTRA_TEXT, text + "\n" +
-                "تم النسخ من تطبيق المٌحقظ 💙 👇 https://play.google.com/store/apps/details?id=com.walid.almuhfz \n");
+        whatsappIntent.putExtra(Intent.EXTRA_TEXT, buildSharedText(text));
         try {
             context.startActivity(whatsappIntent);
         } catch (ActivityNotFoundException ex) {
@@ -177,9 +180,9 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         if (context == null) return;
         ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
         if (clipboard != null) {
-            ClipData clip = ClipData.newPlainText("", text + "\n" + "تم نسخ هذا النص من تطبيق المُحفظ ^_^");
+            ClipData clip = ClipData.newPlainText("المُحفظ", buildSharedText(text));
             clipboard.setPrimaryClip(clip);
-            Toast.makeText(context, "تم نسخ النص - قم بمشاركته الآن مع أصدقائك", Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "تم نسخ النص والمصدر بنجاح 📋", Toast.LENGTH_SHORT).show();
         }
     }
 

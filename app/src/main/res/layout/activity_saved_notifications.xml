@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/app_background"
     android:orientation="vertical"
+    android:fitsSystemWindows="true"
     tools:context=".notifications_messages.SavedNotificationsActivity">
 
     <!-- AppBar -->
@@ -13,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/around_line3"
-        android:fitsSystemWindows="true">
+        >
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
