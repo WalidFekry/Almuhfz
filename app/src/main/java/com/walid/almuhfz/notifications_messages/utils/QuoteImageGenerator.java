@@ -215,7 +215,7 @@ public class QuoteImageGenerator {
                 shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 shareIntent.setDataAndType(contentUri, context.getContentResolver().getType(contentUri));
                 shareIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
-                shareIntent.putExtra(Intent.EXTRA_TEXT, "رسالة تحفيزية من تطبيق المُحفظ للقرآن الكريم 🌸\nحمل التطبيق من متجر بلاي: https://play.google.com/store/apps/details?id=" + context.getPackageName());
+                shareIntent.putExtra(Intent.EXTRA_TEXT, "رسالة تحفيزية من تطبيق المُحفظ للقرآن الكريم\nحمل التطبيق من متجر بلاي: https://play.google.com/store/apps/details?id=" + context.getPackageName());
                 context.startActivity(Intent.createChooser(shareIntent, "مشاركة صورة الاقتباس عبر..."));
             }
         } catch (Exception e) {

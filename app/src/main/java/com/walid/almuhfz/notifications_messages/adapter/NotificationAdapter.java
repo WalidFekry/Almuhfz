@@ -129,7 +129,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
     private String buildSharedText(String text) {
         String cleanText = (text != null) ? text.replace("_", "\n").trim() : "";
-        return cleanText + "\n\n🌸 من تطبيق المُحفظ للقرآن الكريم 👇\nhttps://play.google.com/store/apps/details?id=com.walid.almuhfz";
+        return cleanText + "\n\n من تطبيق المُحفظ للقرآن الكريم 👇\nhttps://play.google.com/store/apps/details?id=com.walid.almuhfz";
     }
 
     private void shareOnFacebook(Context context, String text) {
