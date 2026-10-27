@@ -62,7 +62,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         holder.messageTime.setText(timeText);
 
         setClickListener(holder.shareButton, v -> shareNotification(itemContext, notification));
-        setClickListener(holder.starButton, v -> openLink(itemContext, "https://t.co/XerG0QVIvi"));
+        setClickListener(holder.starButton, v -> openLink(itemContext, "https://play.google.com/store/apps/details?id=com.walid.almuhfz"));
         setClickListener(holder.whatsappButton, v -> shareOnWhatsApp(itemContext, rawTitle));
         setClickListener(holder.copyButton, v -> copyToClipboard(itemContext, rawTitle));
         setClickListener(holder.facebookButton, v -> shareOnFacebook(itemContext, rawTitle));
@@ -94,7 +94,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         sendIntent.setType("text/plain");
         sendIntent.putExtra(Intent.EXTRA_SUBJECT, "تطبيق (المُحفظ)");
         sendIntent.putExtra(Intent.EXTRA_TEXT, rawTitle + "\n" +
-                "تم النسخ من تطبيق المٌحقظ 💙 👇 https://t.co/XerG0QVIvi \n");
+                "تم النسخ من تطبيق المٌحقظ 💙 👇 https://play.google.com/store/apps/details?id=com.walid.almuhfz \n");
         context.startActivity(Intent.createChooser(sendIntent, "مشاركة نصوص من تطبيق المُحفظ:"));
     }
 
@@ -112,11 +112,11 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         whatsappIntent.setType("text/plain");
         whatsappIntent.setPackage("com.whatsapp");
         whatsappIntent.putExtra(Intent.EXTRA_TEXT, text + "\n" +
-                "تم النسخ من تطبيق المٌحقظ 💙 👇 https://t.co/XerG0QVIvi \n");
+                "تم النسخ من تطبيق المٌحقظ 💙 👇 https://play.google.com/store/apps/details?id=com.walid.almuhfz \n");
         try {
             context.startActivity(whatsappIntent);
         } catch (ActivityNotFoundException ex) {
-            openLink(context, "https://play.google.com/store/apps/details?id=com.whatsapp");
+            Toast.makeText(context, "تطبيق واتساب غير مثبت!", Toast.LENGTH_LONG).show();
         }
     }
 
