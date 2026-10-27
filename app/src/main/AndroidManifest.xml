@@ -36,9 +36,11 @@
         <!-- Main Application Activities -->
         <activity
             android:name=".MainActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="false" />
         <activity
             android:name=".notifications_messages.NotificationsMessagesActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="false">
             <intent-filter>
                 <action android:name="NotificationsMessagesActivity" />
@@ -48,24 +50,31 @@
         </activity>
         <activity
             android:name=".NoInternetActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="false" />
         <activity
             android:name=".learning.LearningActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="false" />
         <activity
             android:name=".download.DownloadsActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="false" />
         <activity
             android:name=".bookmarks.BookmarksActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="false" />
         <activity
             android:name=".search.SearchActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="false" />
         <activity
             android:name=".reminder.ReminderSettingsActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="false" />
         <activity
             android:name=".notifications_messages.SavedNotificationsActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="false" />
 
         <!-- FileProvider for Sharing Images -->
